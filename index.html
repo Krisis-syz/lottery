@@ -8,36 +8,72 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
-    :root{--bg:#0a0e17;--card:rgba(17,24,39,.8);--border:rgba(255,255,255,.08);--gold:#f59e0b;--red:#ef4444;--green:#10b981;--text:#f9fafb;--muted:#6b7280}
-    body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px}
+    :root{--bg:#0a0e17;--bg2:#111827;--card:rgba(17,24,39,.8);--border:rgba(255,255,255,.08);--gold:#f59e0b;--red:#ef4444;--green:#10b981;--text:#f9fafb;--sec:#9ca3af;--muted:#6b7280}
+    body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:16px}
     .container{max-width:1200px;margin:0 auto}
-    h1{text-align:center;margin-bottom:30px;background:linear-gradient(135deg,#fbbf24,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-    .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:30px}
-    .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center}
-    .label{font-size:12px;color:var(--muted);text-transform:uppercase}
-    .value{font-size:28px;font-weight:700;font-family:'JetBrains Mono',monospace;margin:8px 0}
-    .sub{font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+    h1{text-align:center;margin-bottom:24px;font-size:24px;background:linear-gradient(135deg,#fbbf24,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    h2{font-size:18px;font-weight:500;margin-bottom:16px}
+    h3{font-size:16px;font-weight:500}
+    .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center}
+    .label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+    .value{font-size:24px;font-weight:700;font-family:'JetBrains Mono',monospace;margin:6px 0}
+    .sub{font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace}
     .up{color:var(--red)}.down{color:var(--green)}
-    .plan{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px}
-    .plan-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
-    .plan-nm{font-size:18px;font-weight:600}
-    .plan-tp{font-size:11px;padding:4px 10px;border-radius:20px;background:rgba(245,158,11,.15);color:var(--gold)}
-    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding-top:16px;border-top:1px solid var(--border)}
+    .plan{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px}
+    .plan-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+    .plan-nm{font-size:16px;font-weight:600}
+    .plan-tp{font-size:10px;padding:3px 8px;border-radius:12px;background:rgba(245,158,11,.15);color:var(--gold)}
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding-top:12px;border-top:1px solid var(--border)}
     .stat{text-align:center}
-    .stat-l{font-size:11px;color:var(--muted)}
-    .stat-v{font-size:16px;font-weight:600;font-family:'JetBrains Mono',monospace;margin-top:4px}
-    .last{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:12px;font-family:'JetBrains Mono',monospace}
-    .chart-box{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:30px}
-    .chart-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
-    .tabs{display:flex;gap:8px}
-    .tab{padding:6px 14px;border:1px solid var(--border);border-radius:20px;background:transparent;color:#9ca3af;cursor:pointer;font-family:'Outfit',sans-serif;font-size:13px}
+    .stat-l{font-size:10px;color:var(--muted)}
+    .stat-v{font-size:14px;font-weight:600;font-family:'JetBrains Mono',monospace;margin-top:2px}
+    .last{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:11px;font-family:'JetBrains Mono',monospace}
+    .box{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px}
+    .box-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+    .tabs{display:flex;gap:6px;flex-wrap:wrap}
+    .tab{padding:5px 12px;border:1px solid var(--border);border-radius:16px;background:transparent;color:var(--sec);cursor:pointer;font-family:'Outfit',sans-serif;font-size:12px}
     .tab.active{background:var(--gold);color:var(--bg);border-color:var(--gold)}
     table{width:100%;border-collapse:collapse}
-    th,td{padding:12px;text-align:left;border-bottom:1px solid var(--border)}
-    th{background:rgba(0,0,0,.2);font-size:12px;color:var(--muted)}
-    td{font-size:14px;font-family:'JetBrains Mono',monospace}
-    .time{text-align:center;color:var(--muted);margin-top:30px;font-size:12px}
-    @media(max-width:768px){.cards,.stats{grid-template-columns:1fr}}
+    th,td{padding:10px 8px;text-align:left;border-bottom:1px solid var(--border);font-size:12px}
+    th{background:rgba(0,0,0,.2);font-size:10px;color:var(--muted);text-transform:uppercase}
+    td{font-family:'JetBrains Mono',monospace}
+    .nav-btn{padding:4px 10px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--sec);cursor:pointer;font-size:12px}
+    .year-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+    .year-box{background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;cursor:pointer}
+    .year-box:hover{border-color:var(--gold)}
+    .year-box.profit-up{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.3)}
+    .year-box.profit-down{background:rgba(16,185,129,.15);border-color:rgba(16,185,129,.3)}
+    .year-nm{font-size:12px;color:var(--sec);margin-bottom:6px}
+    .year-pv{font-size:16px;font-weight:600;font-family:'JetBrains Mono',monospace}
+    .week-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+    .week-box{background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:6px;padding:10px;text-align:center;cursor:pointer}
+    .week-box:hover{border-color:var(--gold)}
+    .week-box.profit-up{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.3)}
+    .week-box.profit-down{background:rgba(16,185,129,.15);border-color:rgba(16,185,129,.3)}
+    .week-rg{font-size:10px;color:var(--muted);margin-bottom:4px}
+    .week-pv{font-size:14px;font-weight:600;font-family:'JetBrains Mono',monospace}
+    .day-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+    .day-hd{text-align:center;font-size:10px;color:var(--muted);padding:6px 0}
+    .day-cell{display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:6px;background:rgba(0,0,0,.2);border:1px solid transparent;padding:8px 4px;height:48px}
+    .day-cell.profit-up{background:rgba(239,68,68,.2);border-color:rgba(239,68,68,.4)}
+    .day-cell.profit-down{background:rgba(16,185,129,.2);border-color:rgba(16,185,129,.4)}
+    .day-num{font-size:12px;font-weight:500;color:var(--sec);margin-bottom:4px}
+    .day-pv{font-size:11px;font-weight:600;font-family:'JetBrains Mono',monospace}
+    .time{text-align:center;color:var(--muted);margin-top:24px;font-size:11px}
+    @media(max-width:768px){
+      body{padding:12px}
+      .cards{grid-template-columns:1fr}
+      .value{font-size:20px}
+      .stats{grid-template-columns:1fr}
+      .year-grid{grid-template-columns:repeat(3,1fr)}
+      .week-grid{grid-template-columns:repeat(3,1fr)}
+      .box-hd{flex-direction:column;align-items:flex-start}
+    }
+    @media(max-width:480px){
+      .year-grid{grid-template-columns:repeat(2,1fr)}
+      .week-grid{grid-template-columns:repeat(2,1fr)}
+    }
   </style>
 </head>
 <body>
@@ -48,29 +84,100 @@
     <div class="card"><div class="label">总回收</div><div class="value">¥874.20</div><div class="sub">上日 ¥366.00</div></div>
     <div class="card"><div class="label">总净收益</div><div class="value down">¥-505.80</div><div class="sub down">上日 ¥-114.00</div></div>
   </div>
-  <div class="chart-box">
-    <div class="chart-hd"><h3>总净收益趋势</h3><div class="tabs"><button class="tab active" onclick="switchChart('day',this)">日</button><button class="tab" onclick="switchChart('month',this)">月</button><button class="tab" onclick="switchChart('year',this)">年</button></div></div>
-    <canvas id="chart" height="80"></canvas>
+  <div class="box">
+    <div class="box-hd"><h3>总净收益趋势</h3><div class="tabs"><button class="tab active" onclick="switchChart('day',this)">日</button><button class="tab" onclick="switchChart('month',this)">月</button><button class="tab" onclick="switchChart('year',this)">年</button></div></div>
+    <canvas id="profitChart" height="80"></canvas>
   </div>
-  <h2 style="margin-bottom:20px">投资计划</h2>
+  <div class="box">
+    <div class="box-hd"><h3>收益日历</h3><div class="tabs"><button class="tab active" onclick="switchCal('day',this)">日</button><button class="tab" onclick="switchCal('week',this)">周</button><button class="tab" onclick="switchCal('year',this)">年</button></div></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><button class="nav-btn" onclick="navCal(-1)">&lt; 上一个</button><span id="calTitle"></span><button class="nav-btn" onclick="navCal(1)">下一个 &gt;</button></div>
+    <div id="calendar"></div>
+  </div>
+  <h2 style="margin:16px 0">投资计划</h2>
   <div class="plan"><div class="plan-hd"><span class="plan-nm">梨子半全场</span><span class="plan-tp">加注</span></div><div class="stats"><div class="stat"><div class="stat-l">本金</div><div class="stat-v">¥300.00</div></div><div class="stat"><div class="stat-l">回收</div><div class="stat-v">¥760.20</div></div><div class="stat"><div class="stat-l">净收益</div><div class="stat-v up">¥460.20</div></div></div><div class="last up">上日: 本金 ¥120.00 | 回收 ¥366.00 | 净收益 ¥246.00</div></div><div class="plan"><div class="plan-hd"><span class="plan-nm">23球</span><span class="plan-tp">普通</span></div><div class="stats"><div class="stat"><div class="stat-l">本金</div><div class="stat-v">¥1080.00</div></div><div class="stat"><div class="stat-l">回收</div><div class="stat-v">¥114.00</div></div><div class="stat"><div class="stat-l">净收益</div><div class="stat-v down">¥-966.00</div></div></div><div class="last down">上日: 本金 ¥360.00 | 回收 ¥0.00 | 净收益 ¥-360.00</div></div>
-  <h2 style="margin:30px 0 20px">投注记录</h2>
-  <div class="card" style="overflow-x:auto"><table><thead><tr><th>日期</th><th>计划</th><th>投注</th><th>结果</th><th>中奖</th><th>净利润</th></tr></thead><tbody><tr><td>2026-07-13</td><td>梨子半全场</td><td>¥60.00</td><td class="">未结算</td><td>-</td><td class="">-</td></tr><tr><td>2026-07-13</td><td>23球</td><td>¥600.00</td><td class="">未结算</td><td>-</td><td class="">-</td></tr><tr><td>2026-07-12</td><td>梨子半全场</td><td>¥120.00</td><td class="up">中</td><td>¥366.00</td><td class="up">¥246.00</td></tr><tr><td>2026-07-12</td><td>23球</td><td>¥360.00</td><td class="down">未中</td><td>-</td><td class="down">¥-360.00</td></tr><tr><td>2026-07-11</td><td>梨子半全场</td><td>¥120.00</td><td class="up">中</td><td>¥394.20</td><td class="up">¥274.20</td></tr><tr><td>2026-07-11</td><td>23球</td><td>¥120.00</td><td class="up">中</td><td>¥114.00</td><td class="down">¥-6.00</td></tr></tbody></table></div>
-  <div class="time">数据更新: 2026/7/14 20:56:38</div>
+  <h2 style="margin:16px 0">投注记录</h2>
+  <div class="box" style="overflow-x:auto"><table><thead><tr><th>日期</th><th>计划</th><th>投注</th><th>结果</th><th>中奖</th><th>净利润</th></tr></thead><tbody><tr><td>2026-07-13</td><td>梨子半全场</td><td>¥60.00</td><td class="">未结算</td><td>-</td><td class="">-</td></tr><tr><td>2026-07-13</td><td>23球</td><td>¥600.00</td><td class="">未结算</td><td>-</td><td class="">-</td></tr><tr><td>2026-07-12</td><td>梨子半全场</td><td>¥120.00</td><td class="up">中</td><td>¥366.00</td><td class="up">¥246.00</td></tr><tr><td>2026-07-12</td><td>23球</td><td>¥360.00</td><td class="down">未中</td><td>-</td><td class="down">¥-360.00</td></tr><tr><td>2026-07-11</td><td>梨子半全场</td><td>¥120.00</td><td class="up">中</td><td>¥394.20</td><td class="up">¥274.20</td></tr><tr><td>2026-07-11</td><td>23球</td><td>¥120.00</td><td class="up">中</td><td>¥114.00</td><td class="down">¥-6.00</td></tr></tbody></table></div>
+  <div class="time">数据更新: 2026/7/14 20:59:56</div>
 </div>
 <script>
-const data=[{"date":"2026-07-11","profit":268.2,"cumulative":268.2},{"date":"2026-07-12","profit":-114,"cumulative":154.2},{"date":"2026-07-13","profit":0,"cumulative":154.2}];
-let chart;
+const dailyData=[{"date":"2026-07-11","profit":268.2,"cumulative":268.2},{"date":"2026-07-12","profit":-114,"cumulative":154.2},{"date":"2026-07-13","profit":0,"cumulative":154.2}];
+const profitMap={};dailyData.forEach(i=>{profitMap[i.date]=i.profit});
+let profitChart,calView='day',calDate=new Date();
+
+// 折线图
 function switchChart(v,el){
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.box:first-of-type .tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-  if(chart)chart.destroy();
+  if(profitChart)profitChart.destroy();
   let l,d;
-  if(v==='day'){l=data.map(i=>i.date);d=data.map(i=>i.cumulative)}
-  else if(v==='month'){const m={};data.forEach(i=>{m[i.date.slice(0,7)]=i.cumulative});l=Object.keys(m).sort();d=l.map(i=>m[i])}
-  else{const y={};data.forEach(i=>{y[i.date.slice(0,4)]=i.cumulative});l=Object.keys(y).sort();d=l.map(i=>y[i])}
-  chart=new Chart(document.getElementById('chart'),{type:'line',data:{labels:l,datasets:[{data:d,borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,.1)',fill:true,tension:.3,pointRadius:4,pointBackgroundColor:'#f59e0b'}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#6b7280'}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#6b7280',callback:v=>'¥'+v}}}}});
+  if(v==='day'){l=dailyData.map(i=>i.date);d=dailyData.map(i=>i.cumulative)}
+  else if(v==='month'){const m={};dailyData.forEach(i=>{m[i.date.slice(0,7)]=i.cumulative});l=Object.keys(m).sort();d=l.map(i=>m[i])}
+  else{const y={};dailyData.forEach(i=>{y[i.date.slice(0,4)]=i.cumulative});l=Object.keys(y).sort();d=l.map(i=>y[i])}
+  profitChart=new Chart(document.getElementById('profitChart'),{type:'line',data:{labels:l,datasets:[{data:d,borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,.1)',fill:true,tension:.3,pointRadius:3,pointBackgroundColor:'#f59e0b'}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#6b7280',maxTicksLimit:8}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#6b7280',callback:v=>'¥'+v}}}}});
 }
-switchChart('day',document.querySelector('.tab'));
+switchChart('day',document.querySelector('.box .tab'));
+
+// 日历
+function switchCal(v,el){
+  calView=v;
+  document.querySelectorAll('.box:nth-of-type(2) .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderCal();
+}
+function navCal(d){
+  if(calView==='year')calDate.setFullYear(calDate.getFullYear()+d);
+  else if(calView==='week')calDate.setDate(calDate.getDate()+d*7*30);
+  else calDate.setMonth(calDate.getMonth()+d);
+  renderCal();
+}
+function fmt(dt){return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0')}
+function renderCal(){
+  const c=document.getElementById('calendar'),t=document.getElementById('calTitle');
+  if(calView==='year')renderYear(c,t);
+  else if(calView==='week')renderWeek(c,t);
+  else renderDay(c,t);
+}
+function renderYear(c,t){
+  const y=calDate.getFullYear();t.textContent=y+'年';
+  let h='<div class="year-grid">';
+  for(let m=0;m<12;m++){
+    let mp=0;const dim=new Date(y,m+1,0).getDate();
+    for(let d=1;d<=dim;d++){const ds=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');if(profitMap[ds])mp+=profitMap[ds]}
+    const cls=mp>0?'profit-up':mp<0?'profit-down':'';
+    const txt=mp!==0?(mp>0?'+':'')+mp.toFixed(0):'-';
+    h+='<div class="year-box '+cls+'" onclick="jumpMonth('+y+','+m+')"><div class="year-nm">'+(m+1)+'月</div><div class="year-pv '+(mp>0?'up':mp<0?'down':'')+'">'+txt+'</div></div>';
+  }
+  c.innerHTML=h+'</div>';
+}
+function jumpMonth(y,m){calDate=new Date(y,m,1);calView='day';document.querySelectorAll('.box:nth-of-type(2) .tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.box:nth-of-type(2) .tab')[0].classList.add('active');renderCal()}
+function renderWeek(c,t){
+  const cur=new Date(calDate),dow=cur.getDay(),start=new Date(cur);start.setDate(cur.getDate()-dow-7*15);
+  const end=new Date(start);end.setDate(start.getDate()+7*30-1);
+  t.textContent=fmt(start)+' ~ '+fmt(end);
+  let h='<div class="week-grid">';
+  for(let w=0;w<30;w++){
+    const ws=new Date(start);ws.setDate(start.getDate()+w*7);
+    let wp=0;for(let d=0;d<7;d++){const dt=new Date(ws);dt.setDate(ws.getDate()+d);const ds=fmt(dt);if(profitMap[ds])wp+=profitMap[ds]}
+    const cls=wp>0?'profit-up':wp<0?'profit-down':'';
+    const txt=wp!==0?(wp>0?'+':'')+wp.toFixed(0):'-';
+    h+='<div class="week-box '+cls+'" onclick="jumpWeek(''+fmt(ws)+'')"><div class="week-rg">'+(ws.getMonth()+1)+'/'+ws.getDate()+'</div><div class="week-pv '+(wp>0?'up':wp<0?'down':'')+'">'+txt+'</div></div>';
+  }
+  c.innerHTML=h+'</div>';
+}
+function jumpWeek(ds){calDate=new Date(ds);calView='day';document.querySelectorAll('.box:nth-of-type(2) .tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.box:nth-of-type(2) .tab')[0].classList.add('active');renderCal()}
+function renderDay(c,t){
+  const y=calDate.getFullYear(),m=calDate.getMonth();
+  t.textContent=y+'年'+(m+1)+'月';
+  const first=new Date(y,m,1),last=new Date(y,m+1,0),start=first.getDay();
+  let h='<div class="day-grid"><div class="day-hd">日</div><div class="day-hd">一</div><div class="day-hd">二</div><div class="day-hd">三</div><div class="day-hd">四</div><div class="day-hd">五</div><div class="day-hd">六</div>';
+  for(let i=0;i<start;i++)h+='<div class="day-cell"></div>';
+  for(let d=1;d<=last.getDate();d++){
+    const ds=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const p=profitMap[ds],cls=p>0?'profit-up':p<0?'profit-down':'',txt=p!==undefined?(p>0?'+':'')+p.toFixed(0):'';
+    h+='<div class="day-cell '+cls+'"><span class="day-num">'+d+'</span><span class="day-pv '+(p>0?'up':p<0?'down':'')+'">'+txt+'</span></div>';
+  }
+  c.innerHTML=h+'</div>';
+}
+renderCal();
 </script>
 </body></html>
