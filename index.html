@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>体彩投资计划</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{--bg:#0a0e17;--card:rgba(17,24,39,.8);--border:rgba(255,255,255,.08);--gold:#f59e0b;--red:#ef4444;--green:#10b981;--text:#f9fafb;--muted:#6b7280}
+    body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px}
+    .container{max-width:1200px;margin:0 auto}
+    h1{text-align:center;margin-bottom:30px;background:linear-gradient(135deg,#fbbf24,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+    .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:30px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center}
+    .label{font-size:12px;color:var(--muted);text-transform:uppercase}
+    .value{font-size:28px;font-weight:700;font-family:'JetBrains Mono',monospace;margin:8px 0}
+    .sub{font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+    .up{color:var(--red)}.down{color:var(--green)}
+    .plan{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px}
+    .plan-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+    .plan-nm{font-size:18px;font-weight:600}
+    .plan-tp{font-size:11px;padding:4px 10px;border-radius:20px;background:rgba(245,158,11,.15);color:var(--gold)}
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding-top:16px;border-top:1px solid var(--border)}
+    .stat{text-align:center}
+    .stat-l{font-size:11px;color:var(--muted)}
+    .stat-v{font-size:16px;font-weight:600;font-family:'JetBrains Mono',monospace;margin-top:4px}
+    .last{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:12px;font-family:'JetBrains Mono',monospace}
+    .chart-box{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:30px}
+    .chart-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+    .tabs{display:flex;gap:8px}
+    .tab{padding:6px 14px;border:1px solid var(--border);border-radius:20px;background:transparent;color:#9ca3af;cursor:pointer;font-family:'Outfit',sans-serif;font-size:13px}
+    .tab.active{background:var(--gold);color:var(--bg);border-color:var(--gold)}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:12px;text-align:left;border-bottom:1px solid var(--border)}
+    th{background:rgba(0,0,0,.2);font-size:12px;color:var(--muted)}
+    td{font-size:14px;font-family:'JetBrains Mono',monospace}
+    .time{text-align:center;color:var(--muted);margin-top:30px;font-size:12px}
+    @media(max-width:768px){.cards,.stats{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>体彩投资计划</h1>
+  <div class="cards">
+    <div class="card"><div class="label">总本金</div><div class="value">¥1380.00</div><div class="sub">上日 ¥480.00</div></div>
+    <div class="card"><div class="label">总回收</div><div class="value">¥874.20</div><div class="sub">上日 ¥366.00</div></div>
+    <div class="card"><div class="label">总净收益</div><div class="value down">¥-505.80</div><div class="sub down">上日 ¥-114.00</div></div>
+  </div>
+  <div class="chart-box">
+    <div class="chart-hd"><h3>总净收益趋势</h3><div class="tabs"><button class="tab active" onclick="switchChart('day',this)">日</button><button class="tab" onclick="switchChart('month',this)">月</button><button class="tab" onclick="switchChart('year',this)">年</button></div></div>
+    <canvas id="chart" height="80"></canvas>
+  </div>
+  <h2 style="margin-bottom:20px">投资计划</h2>
+  <div class="plan"><div class="plan-hd"><span class="plan-nm">梨子半全场</span><span class="plan-tp">加注</span></div><div class="stats"><div class="stat"><div class="stat-l">本金</div><div class="stat-v">¥300.00</div></div><div class="stat"><div class="stat-l">回收</div><div class="stat-v">¥760.20</div></div><div class="stat"><div class="stat-l">净收益</div><div class="stat-v up">¥460.20</div></div></div><div class="last up">上日: 本金 ¥120.00 | 回收 ¥366.00 | 净收益 ¥246.00</div></div><div class="plan"><div class="plan-hd"><span class="plan-nm">23球</span><span class="plan-tp">普通</span></div><div class="stats"><div class="stat"><div class="stat-l">本金</div><div class="stat-v">¥1080.00</div></div><div class="stat"><div class="stat-l">回收</div><div class="stat-v">¥114.00</div></div><div class="stat"><div class="stat-l">净收益</div><div class="stat-v down">¥-966.00</div></div></div><div class="last down">上日: 本金 ¥360.00 | 回收 ¥0.00 | 净收益 ¥-360.00</div></div>
+  <h2 style="margin:30px 0 20px">投注记录</h2>
+  <div class="card" style="overflow-x:auto"><table><thead><tr><th>日期</th><th>计划</th><th>投注</th><th>结果</th><th>中奖</th><th>净利润</th></tr></thead><tbody><tr><td>2026-07-13</td><td>梨子半全场</td><td>¥60.00</td><td class="">未结算</td><td>-</td><td class="">-</td></tr><tr><td>2026-07-13</td><td>23球</td><td>¥600.00</td><td class="">未结算</td><td>-</td><td class="">-</td></tr><tr><td>2026-07-12</td><td>梨子半全场</td><td>¥120.00</td><td class="up">中</td><td>¥366.00</td><td class="up">¥246.00</td></tr><tr><td>2026-07-12</td><td>23球</td><td>¥360.00</td><td class="down">未中</td><td>-</td><td class="down">¥-360.00</td></tr><tr><td>2026-07-11</td><td>梨子半全场</td><td>¥120.00</td><td class="up">中</td><td>¥394.20</td><td class="up">¥274.20</td></tr><tr><td>2026-07-11</td><td>23球</td><td>¥120.00</td><td class="up">中</td><td>¥114.00</td><td class="down">¥-6.00</td></tr></tbody></table></div>
+  <div class="time">数据更新: 2026/7/14 20:55:53</div>
+</div>
+<script>
+const data=[{"date":"2026-07-11","profit":268.2,"cumulative":268.2},{"date":"2026-07-12","profit":-114,"cumulative":154.2},{"date":"2026-07-13","profit":0,"cumulative":154.2}];
+let chart;
+function switchChart(v,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  if(chart)chart.destroy();
+  let l,d;
+  if(v==='day'){l=data.map(i=>i.date);d=data.map(i=>i.cumulative)}
+  else if(v==='month'){const m={};data.forEach(i=>{m[i.date.slice(0,7)]=i.cumulative});l=Object.keys(m).sort();d=l.map(i=>m[i])}
+  else{const y={};data.forEach(i=>{y[i.date.slice(0,4)]=i.cumulative});l=Object.keys(y).sort();d=l.map(i=>y[i])}
+  chart=new Chart(document.getElementById('chart'),{type:'line',data:{labels:l,datasets:[{data:d,borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,.1)',fill:true,tension:.3,pointRadius:4,pointBackgroundColor:'#f59e0b'}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#6b7280'}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#6b7280',callback:v=>'¥'+v}}}}});
+}
+switchChart('day',document.querySelector('.tab'));
+</script>
+</body></html>
