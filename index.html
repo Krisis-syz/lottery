@@ -108,7 +108,7 @@
     </div>
     <h3 style="margin-bottom:12px">投资计划</h3>
     <div class="plan" onclick="showPlan(0)"><div class="plan-hd"><span class="plan-nm">梨子半全场 <span class="lose-streak">1连黑</span></span><span class="plan-tp">加注</span></div><div class="stats"><div class="stat"><div class="stat-l">本金</div><div class="stat-v">¥1260.00</div></div><div class="stat"><div class="stat-l">回收</div><div class="stat-v">¥2162.10</div></div><div class="stat"><div class="stat-l">净收益</div><div class="stat-v up">¥902.10</div></div></div><div class="last down">上日: 本金 ¥100.00 | 回收 ¥0.00 | 净收益 ¥-100.00</div></div><div class="plan" onclick="showPlan(1)"><div class="plan-hd"><span class="plan-nm">23球等 <span class="lose-streak">1连黑</span></span><span class="plan-tp">普通</span></div><div class="stats"><div class="stat"><div class="stat-l">本金</div><div class="stat-v">¥1270.00</div></div><div class="stat"><div class="stat-l">回收</div><div class="stat-v">¥1363.30</div></div><div class="stat"><div class="stat-l">净收益</div><div class="stat-v up">¥93.30</div></div></div><div class="last down">上日: 本金 ¥30.00 | 回收 ¥0.00 | 净收益 ¥-30.00</div></div><div class="plan" onclick="showPlan(2)"><div class="plan-hd"><span class="plan-nm">霸道</span><span class="plan-tp">加注</span></div><div class="stats"><div class="stat"><div class="stat-l">本金</div><div class="stat-v">¥3360.00</div></div><div class="stat"><div class="stat-l">回收</div><div class="stat-v">¥3342.84</div></div><div class="stat"><div class="stat-l">净收益</div><div class="stat-v down">¥-17.16</div></div></div><div class="last up">上日: 本金 ¥1100.00 | 回收 ¥3342.84 | 净收益 ¥2242.84</div></div><div class="plan" onclick="showPlan(3)"><div class="plan-hd"><span class="plan-nm">篮球</span><span class="plan-tp">加注</span></div><div class="stats"><div class="stat"><div class="stat-l">本金</div><div class="stat-v">¥360.00</div></div><div class="stat"><div class="stat-l">回收</div><div class="stat-v">¥695.40</div></div><div class="stat"><div class="stat-l">净收益</div><div class="stat-v up">¥335.40</div></div></div><div class="last up">上日: 本金 ¥120.00 | 回收 ¥348.60 | 净收益 ¥228.60</div></div><div class="plan" onclick="showPlan(4)"><div class="plan-hd"><span class="plan-nm">步步高</span><span class="plan-tp">加注</span></div><div class="stats"><div class="stat"><div class="stat-l">本金</div><div class="stat-v">¥440.00</div></div><div class="stat"><div class="stat-l">回收</div><div class="stat-v">¥626.98</div></div><div class="stat"><div class="stat-l">净收益</div><div class="stat-v up">¥186.98</div></div></div><div class="last up">上日: 本金 ¥200.00 | 回收 ¥626.98 | 净收益 ¥426.98</div></div><div class="plan" onclick="showPlan(5)"><div class="plan-hd"><span class="plan-nm">玲珑</span><span class="plan-tp">加注</span></div><div class="stats"><div class="stat"><div class="stat-l">本金</div><div class="stat-v">¥1100.00</div></div><div class="stat"><div class="stat-l">回收</div><div class="stat-v">¥1590.00</div></div><div class="stat"><div class="stat-l">净收益</div><div class="stat-v up">¥490.00</div></div></div><div class="last up">上日: 本金 ¥500.00 | 回收 ¥1590.00 | 净收益 ¥1090.00</div></div><div class="plan" onclick="showPlan(6)"><div class="plan-hd"><span class="plan-nm">如意</span><span class="plan-tp">加注</span></div><div class="stats"><div class="stat"><div class="stat-l">本金</div><div class="stat-v">¥3700.00</div></div><div class="stat"><div class="stat-l">回收</div><div class="stat-v">¥4555.44</div></div><div class="stat"><div class="stat-l">净收益</div><div class="stat-v up">¥855.44</div></div></div><div class="last up">上日: 本金 ¥1500.00 | 回收 ¥4555.44 | 净收益 ¥3055.44</div></div>
-    <div class="time">数据更新: 2026/7/25 15:33:26</div>
+    <div class="time">数据更新: 2026/7/25 15:36:03</div>
   </div>
 
   <div id="pageChart" class="page">
@@ -133,13 +133,6 @@
     <h3 style="margin-bottom:12px">投注记录</h3>
     <div class="box" style="overflow-x:auto"><table><thead><tr><th>日期</th><th>计划</th><th>投注</th><th>结果</th><th>中奖</th><th>净利润</th></tr></thead><tbody id="recordsTable"></tbody></table></div>
   </div>
-</div>
-
-<div class="bottom-nav">
-  <div class="nav-item active" onclick="showPage('Home',this)"><span>🏠</span>主页</div>
-  <div class="nav-item" onclick="showPage('Chart',this)"><span>📊</span>收益</div>
-  <div class="nav-item" onclick="showPage('Plans',this)"><span>📋</span>计划</div>
-  <div class="nav-item" onclick="showPage('Records',this)"><span>📝</span>记录</div>
 </div>
 
 <script>
@@ -359,4 +352,10 @@ function renderWeek(c,t){const cur=new Date(calDate),dow=cur.getDay(),start=new 
 function jumpWeek(ds){calDate=new Date(ds);calView='day';document.querySelector('#pageChart .tabs .tab').click();renderCal()}
 function renderDay(c,t){const y=calDate.getFullYear(),m=calDate.getMonth();t.textContent=y+'年'+(m+1)+'月';const first=new Date(y,m,1),last=new Date(y,m+1,0),start=first.getDay();let h='<div class="day-grid"><div class="day-hd">日</div><div class="day-hd">一</div><div class="day-hd">二</div><div class="day-hd">三</div><div class="day-hd">四</div><div class="day-hd">五</div><div class="day-hd">六</div>';for(let i=0;i<start;i++)h+='<div class="day-cell"></div>';for(let d=1;d<=last.getDate();d++){const ds=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');const p=profitMap[ds],cls=p>0?'profit-up':p<0?'profit-down':'',txt=p!==undefined?(p>0?'+':'')+p.toFixed(0):'';h+='<div class="day-cell '+cls+'"><span class="day-num">'+d+'</span><span class="day-pv '+(p>0?'up':p<0?'down':'')+'">'+txt+'</span></div>'}c.innerHTML=h+'</div>'}
 </script>
+<div class="bottom-nav">
+  <div class="nav-item active" onclick="showPage('Home',this)"><span>🏠</span>主页</div>
+  <div class="nav-item" onclick="showPage('Chart',this)"><span>📊</span>收益</div>
+  <div class="nav-item" onclick="showPage('Plans',this)"><span>📋</span>计划</div>
+  <div class="nav-item" onclick="showPage('Records',this)"><span>📝</span>记录</div>
+</div>
 </body></html>
