@@ -73,6 +73,17 @@
     .detail.active{display:block}
     .back-btn{padding:6px 12px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--sec);cursor:pointer;font-size:12px;margin-bottom:12px}
     .time{text-align:center;color:var(--muted);margin-top:20px;font-size:10px}
+    .month-header{cursor:pointer}
+    .month-header:hover td{background:rgba(245,158,11,.08)}
+    .month-header td{padding:10px 8px;font-weight:500}
+    .month-label{display:flex;align-items:center;gap:6px}
+    .month-label .arrow{color:var(--gold);font-size:10px;transition:transform .2s}
+    .month-header.expanded .arrow{transform:rotate(90deg)}
+    .month-stats{display:flex;gap:14px;font-size:11px;color:var(--sec)}
+    .rec-row.hidden,.plan-rec-row.hidden{display:none}
+    .chart-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px}
+    .chart-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+    .plan-calendar-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
     @media(max-width:480px){
       .cards{grid-template-columns:1fr}
       .value{font-size:18px}
@@ -97,7 +108,7 @@
     </div>
     <h3 style="margin-bottom:12px">投资计划</h3>
     <div class="plan" onclick="showPlan(0)"><div class="plan-hd"><span class="plan-nm">梨子半全场 <span class="lose-streak">1连黑</span></span><span class="plan-tp">加注</span></div><div class="stats"><div class="stat"><div class="stat-l">本金</div><div class="stat-v">¥1060.00</div></div><div class="stat"><div class="stat-l">回收</div><div class="stat-v">¥2162.10</div></div><div class="stat"><div class="stat-l">净收益</div><div class="stat-v up">¥1102.10</div></div></div><div class="last down">上日: 本金 ¥100.00 | 回收 ¥0.00 | 净收益 ¥-100.00</div></div><div class="plan" onclick="showPlan(1)"><div class="plan-hd"><span class="plan-nm">23球等 <span class="lose-streak">1连黑</span></span><span class="plan-tp">普通</span></div><div class="stats"><div class="stat"><div class="stat-l">本金</div><div class="stat-v">¥1270.00</div></div><div class="stat"><div class="stat-l">回收</div><div class="stat-v">¥1363.30</div></div><div class="stat"><div class="stat-l">净收益</div><div class="stat-v up">¥93.30</div></div></div><div class="last down">上日: 本金 ¥30.00 | 回收 ¥0.00 | 净收益 ¥-30.00</div></div><div class="plan" onclick="showPlan(2)"><div class="plan-hd"><span class="plan-nm">霸道</span><span class="plan-tp">加注</span></div><div class="stats"><div class="stat"><div class="stat-l">本金</div><div class="stat-v">¥3360.00</div></div><div class="stat"><div class="stat-l">回收</div><div class="stat-v">¥3342.84</div></div><div class="stat"><div class="stat-l">净收益</div><div class="stat-v down">¥-17.16</div></div></div><div class="last up">上日: 本金 ¥1100.00 | 回收 ¥3342.84 | 净收益 ¥2242.84</div></div><div class="plan" onclick="showPlan(3)"><div class="plan-hd"><span class="plan-nm">篮球</span><span class="plan-tp">加注</span></div><div class="stats"><div class="stat"><div class="stat-l">本金</div><div class="stat-v">¥360.00</div></div><div class="stat"><div class="stat-l">回收</div><div class="stat-v">¥695.40</div></div><div class="stat"><div class="stat-l">净收益</div><div class="stat-v up">¥335.40</div></div></div><div class="last up">上日: 本金 ¥120.00 | 回收 ¥348.60 | 净收益 ¥228.60</div></div><div class="plan" onclick="showPlan(4)"><div class="plan-hd"><span class="plan-nm">步步高</span><span class="plan-tp">加注</span></div><div class="stats"><div class="stat"><div class="stat-l">本金</div><div class="stat-v">¥440.00</div></div><div class="stat"><div class="stat-l">回收</div><div class="stat-v">¥626.98</div></div><div class="stat"><div class="stat-l">净收益</div><div class="stat-v up">¥186.98</div></div></div><div class="last up">上日: 本金 ¥200.00 | 回收 ¥626.98 | 净收益 ¥426.98</div></div><div class="plan" onclick="showPlan(5)"><div class="plan-hd"><span class="plan-nm">玲珑</span><span class="plan-tp">加注</span></div><div class="stats"><div class="stat"><div class="stat-l">本金</div><div class="stat-v">¥1100.00</div></div><div class="stat"><div class="stat-l">回收</div><div class="stat-v">¥1590.00</div></div><div class="stat"><div class="stat-l">净收益</div><div class="stat-v up">¥490.00</div></div></div><div class="last up">上日: 本金 ¥500.00 | 回收 ¥1590.00 | 净收益 ¥1090.00</div></div><div class="plan" onclick="showPlan(6)"><div class="plan-hd"><span class="plan-nm">如意</span><span class="plan-tp">加注</span></div><div class="stats"><div class="stat"><div class="stat-l">本金</div><div class="stat-v">¥3700.00</div></div><div class="stat"><div class="stat-l">回收</div><div class="stat-v">¥4555.44</div></div><div class="stat"><div class="stat-l">净收益</div><div class="stat-v up">¥855.44</div></div></div><div class="last up">上日: 本金 ¥1500.00 | 回收 ¥4555.44 | 净收益 ¥3055.44</div></div>
-    <div class="time">数据更新: 2026/7/25 15:20:32</div>
+    <div class="time">数据更新: 2026/7/25 15:26:44</div>
   </div>
 
   <div id="pageChart" class="page">
@@ -120,7 +131,7 @@
 
   <div id="pageRecords" class="page">
     <h3 style="margin-bottom:12px">投注记录</h3>
-    <div class="box" style="overflow-x:auto"><table><thead><tr><th>日期</th><th>计划</th><th>投注</th><th>结果</th><th>中奖</th><th>净利润</th></tr></thead><tbody><tr><td>2026-07-24</td><td>梨子半全场</td><td>¥100.00</td><td class="down">未中</td><td>-</td><td class="down">¥-100.00</td></tr><tr><td>2026-07-24</td><td>如意</td><td>¥1500.00</td><td class="up">中</td><td>¥4555.44</td><td class="up">¥3055.44</td></tr><tr><td>2026-07-23</td><td>如意</td><td>¥1000.00</td><td class="down">未中</td><td>-</td><td class="down">¥-1000.00</td></tr><tr><td>2026-07-22</td><td>霸道</td><td>¥1100.00</td><td class="up">中</td><td>¥3342.84</td><td class="up">¥2242.84</td></tr><tr><td>2026-07-22</td><td>玲珑</td><td>¥500.00</td><td class="up">中</td><td>¥1590.00</td><td class="up">¥1090.00</td></tr><tr><td>2026-07-22</td><td>如意</td><td>¥600.00</td><td class="down">未中</td><td>-</td><td class="down">¥-600.00</td></tr><tr><td>2026-07-21</td><td>梨子半全场</td><td>¥120.00</td><td class="up">中</td><td>¥391.00</td><td class="up">¥271.00</td></tr><tr><td>2026-07-21</td><td>霸道</td><td>¥900.00</td><td class="down">未中</td><td>-</td><td class="down">¥-900.00</td></tr><tr><td>2026-07-21</td><td>玲珑</td><td>¥200.00</td><td class="down">未中</td><td>-</td><td class="down">¥-200.00</td></tr><tr><td>2026-07-21</td><td>玲珑</td><td>¥300.00</td><td class="down">未中</td><td>-</td><td class="down">¥-300.00</td></tr><tr><td>2026-07-21</td><td>如意</td><td>¥400.00</td><td class="down">未中</td><td>-</td><td class="down">¥-400.00</td></tr><tr><td>2026-07-20</td><td>梨子半全场</td><td>¥60.00</td><td class="down">未中</td><td>-</td><td class="down">¥-60.00</td></tr><tr><td>2026-07-20</td><td>篮球</td><td>¥120.00</td><td class="up">中</td><td>¥348.60</td><td class="up">¥228.60</td></tr><tr><td>2026-07-20</td><td>玲珑</td><td>¥100.00</td><td class="down">未中</td><td>-</td><td class="down">¥-100.00</td></tr><tr><td>2026-07-20</td><td>如意</td><td>¥200.00</td><td class="down">未中</td><td>-</td><td class="down">¥-200.00</td></tr><tr><td>2026-07-19</td><td>梨子半全场</td><td>¥120.00</td><td class="up">中</td><td>¥395.90</td><td class="up">¥275.90</td></tr><tr><td>2026-07-19</td><td>23球等</td><td>¥30.00</td><td class="down">未中</td><td>-</td><td class="down">¥-30.00</td></tr><tr><td>2026-07-19</td><td>霸道</td><td>¥600.00</td><td class="down">未中</td><td>-</td><td class="down">¥-600.00</td></tr><tr><td>2026-07-19</td><td>篮球</td><td>¥60.00</td><td class="down">未中</td><td>-</td><td class="down">¥-60.00</td></tr><tr><td>2026-07-19</td><td>步步高</td><td>¥120.00</td><td class="down">未中</td><td>-</td><td class="down">¥-120.00</td></tr><tr><td>2026-07-19</td><td>步步高</td><td>¥200.00</td><td class="up">中</td><td>¥626.98</td><td class="up">¥426.98</td></tr><tr><td>2026-07-18</td><td>梨子半全场</td><td>¥40.00</td><td class="down">未中</td><td>-</td><td class="down">¥-40.00</td></tr><tr><td>2026-07-18</td><td>梨子半全场</td><td>¥80.00</td><td class="down">未中</td><td>-</td><td class="down">¥-80.00</td></tr><tr><td>2026-07-18</td><td>23球等</td><td>¥40.00</td><td class="down">未中</td><td>-</td><td class="down">¥-40.00</td></tr><tr><td>2026-07-18</td><td>23球等</td><td>¥80.00</td><td class="up">中</td><td>¥146.30</td><td class="up">¥66.30</td></tr><tr><td>2026-07-18</td><td>霸道</td><td>¥320.00</td><td class="down">未中</td><td>-</td><td class="down">¥-320.00</td></tr><tr><td>2026-07-18</td><td>步步高</td><td>¥40.00</td><td class="down">未中</td><td>-</td><td class="down">¥-40.00</td></tr><tr><td>2026-07-18</td><td>步步高</td><td>¥80.00</td><td class="down">未中</td><td>-</td><td class="down">¥-80.00</td></tr><tr><td>2026-07-17</td><td>梨子半全场</td><td>¥80.00</td><td class="up">中</td><td>¥264.00</td><td class="up">¥184.00</td></tr><tr><td>2026-07-17</td><td>霸道</td><td>¥200.00</td><td class="down">未中</td><td>-</td><td class="down">¥-200.00</td></tr><tr><td>2026-07-17</td><td>篮球</td><td>¥120.00</td><td class="up">中</td><td>¥346.80</td><td class="up">¥226.80</td></tr><tr><td>2026-07-16</td><td>梨子半全场</td><td>¥40.00</td><td class="down">未中</td><td>-</td><td class="down">¥-40.00</td></tr><tr><td>2026-07-16</td><td>23球等</td><td>¥40.00</td><td class="up">中</td><td>¥67.00</td><td class="up">¥27.00</td></tr><tr><td>2026-07-16</td><td>霸道</td><td>¥120.00</td><td class="down">未中</td><td>-</td><td class="down">¥-120.00</td></tr><tr><td>2026-07-16</td><td>篮球</td><td>¥60.00</td><td class="down">未中</td><td>-</td><td class="down">¥-60.00</td></tr><tr><td>2026-07-15</td><td>梨子半全场</td><td>¥120.00</td><td class="up">中</td><td>¥351.00</td><td class="up">¥231.00</td></tr><tr><td>2026-07-15</td><td>霸道</td><td>¥80.00</td><td class="down">未中</td><td>-</td><td class="down">¥-80.00</td></tr><tr><td>2026-07-14</td><td>霸道</td><td>¥40.00</td><td class="down">未中</td><td>-</td><td class="down">¥-40.00</td></tr><tr><td>2026-07-13</td><td>梨子半全场</td><td>¥60.00</td><td class="down">未中</td><td>-</td><td class="down">¥-60.00</td></tr><tr><td>2026-07-13</td><td>23球等</td><td>¥600.00</td><td class="up">中</td><td>¥1036.00</td><td class="up">¥436.00</td></tr><tr><td>2026-07-12</td><td>梨子半全场</td><td>¥120.00</td><td class="up">中</td><td>¥366.00</td><td class="up">¥246.00</td></tr><tr><td>2026-07-12</td><td>23球等</td><td>¥360.00</td><td class="down">未中</td><td>-</td><td class="down">¥-360.00</td></tr><tr><td>2026-07-11</td><td>梨子半全场</td><td>¥120.00</td><td class="up">中</td><td>¥394.20</td><td class="up">¥274.20</td></tr><tr><td>2026-07-11</td><td>23球等</td><td>¥120.00</td><td class="up">中</td><td>¥114.00</td><td class="down">¥-6.00</td></tr></tbody></table></div>
+    <div class="box" style="overflow-x:auto"><table><thead><tr><th>日期</th><th>计划</th><th>投注</th><th>结果</th><th>中奖</th><th>净利润</th></tr></thead><tbody id="recordsTable"></tbody></table></div>
   </div>
 </div>
 
@@ -144,7 +155,7 @@ function toggleTheme(){
   localStorage.setItem('theme',t);
   document.getElementById('themeIcon').textContent=t==='light'?'🌙':'☀️';
 }
-(function(){const t=localStorage.getItem('theme')||'dark';document.documentElement.setAttribute('data-theme',t);document.getElementById('themeIcon').textContent=t==='light'?'🌙':'☀️'})();
+(function(){const t=localStorage.getItem('theme')||'dark';document.documentElement.setAttribute('data-theme',t);document.getElementById('themeIcon').textContent=t==='light'?'🌙':'☀️';renderRecordsTable()})();
 
 function showPage(name,el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -162,19 +173,160 @@ function showPlan(i){
   h+='<div class="box"><div class="plan-hd"><span class="plan-nm">'+p.name+'</span><span class="plan-tp">'+(p.type==='martingale'?'加注':'普通')+'</span></div>';
   h+='<div class="stats"><div class="stat"><div class="stat-l">本金</div><div class="stat-v">¥'+p.totalInvested.toFixed(2)+'</div></div><div class="stat"><div class="stat-l">回收</div><div class="stat-v">¥'+p.totalReturned.toFixed(2)+'</div></div><div class="stat"><div class="stat-l">净收益</div><div class="stat-v '+(p.totalProfit>=0?'up':'down')+'">¥'+p.totalProfit.toFixed(2)+'</div></div></div></div>';
   h+='<h3 style="margin:12px 0">投注记录</h3>';
+  // 按月分组
+  const now=new Date();
+  const cm=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  const groups={};
+  recs.forEach(r=>{const m=r.date.substring(0,7);if(!groups[m])groups[m]=[];groups[m].push(r)});
+  const months=Object.keys(groups).sort().reverse();
   h+='<div class="box" style="overflow-x:auto"><table><thead><tr><th>日期</th><th>投注</th><th>结果</th><th>中奖</th><th>净利润</th></tr></thead><tbody>';
-  recs.forEach(r=>{
-    h+='<tr><td>'+r.date+'</td><td>¥'+r.betAmount.toFixed(2)+'</td>';
-    h+='<td class="'+(r.result==='win'?'up':r.result==='lose'?'down':'')+'">'+(r.result==='win'?'中':r.result==='lose'?'未中':'未结算')+'</td>';
-    h+='<td>'+(r.winAmount>0?'¥'+r.winAmount.toFixed(2):'-')+'</td>';
-    h+='<td class="'+(r.profit>0?'up':r.profit<0?'down':'')+'">'+(r.result?'¥'+r.profit.toFixed(2):'-')+'</td></tr>';
+  months.forEach(m=>{
+    const mr=groups[m];
+    const isC=m===cm;
+    let tb=0,tp=0;
+    mr.forEach(r=>{tb+=r.betAmount;if(r.result)tp+=r.profit});
+    const [y,mon]=m.split('-');
+    const pc=tp>0?'up':tp<0?'down':'';
+    h+='<tr class="month-header'+(isC?' expanded':'')+'" id="phdr-'+m+'" onclick="togglePlanRecGroup(''+m+'')"><td colspan="5"><div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer"><div class="month-label"><span class="arrow">▶</span> <span>'+y+'年'+parseInt(mon)+'月</span></div><div class="month-stats"><span>'+mr.length+'条</span> <span>本金 ¥'+tb.toFixed(0)+'</span> <span class="'+pc+'">净收益 ¥'+tp.toFixed(0)+'</span></div></div></td></tr>';
+    mr.forEach(r=>{
+      const hid=isC?'':' hidden';
+      h+='<tr class="plan-rec-row pgrp-'+m+hid+'"><td>'+r.date+'</td><td>¥'+r.betAmount.toFixed(2)+'</td><td class="'+(r.result==='win'?'up':r.result==='lose'?'down':'')+'">'+(r.result==='win'?'中':r.result==='lose'?'未中':'未结算')+'</td><td>'+(r.winAmount>0?'¥'+r.winAmount.toFixed(2):'-')+'</td><td class="'+(r.profit>0?'up':r.profit<0?'down':'')+'">'+(r.result?'¥'+r.profit.toFixed(2):'-')+'</td></tr>';
+    });
   });
   h+='</tbody></table></div>';
+  // 收益趋势图
+  h+='<div class="chart-box"><div class="chart-hd"><h3>收益趋势</h3><div class="tabs"><button class="tab active" onclick="renderPlanChart('+i+','day',this)">日</button><button class="tab" onclick="renderPlanChart('+i+','month',this)">月</button></div></div><canvas id="planProfitChart" height="150"></canvas></div>';
+  // 日历图
+  h+='<div class="chart-box"><div class="chart-hd"><h3>收益日历</h3><div class="tabs"><button class="tab active" onclick="renderPlanCal('+i+','day',this)">日</button><button class="tab" onclick="renderPlanCal('+i+','week',this)">周</button><button class="tab" onclick="renderPlanCal('+i+','year',this)">年</button></div></div><div class="plan-calendar-nav"><button class="nav-btn" onclick="navPlanCal(-1)">&lt; 上一个</button><span id="planCalTitle"></span><button class="nav-btn" onclick="navPlanCal(1)">下一个 &gt;</button></div><div id="planCalendar"></div></div>';
   document.getElementById('planDetail').innerHTML=h;
   document.getElementById('planDetail').classList.add('active');
   document.querySelectorAll('#pagePlans .plan').forEach(p=>p.style.display='none');
+  // 初始化图表
+  window._currentPlanIdx=i;
+  window._planCalView='day';
+  window._planCalDate=new Date();
+  renderPlanChart(i,'day');
+  renderPlanCal(i,'day');
+}
+function togglePlanRecGroup(m){
+  const hdr=document.getElementById('phdr-'+m);
+  const rows=document.querySelectorAll('.pgrp-'+m);
+  hdr.classList.toggle('expanded');
+  rows.forEach(r=>r.classList.toggle('hidden'));
+}
+function renderPlanChart(i,v,el){
+  if(el){el.parentElement.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active')}
+  const p=plans[i];
+  // 按日期计算累计
+  const sorted=p.records.filter(r=>r.result).slice().sort((a,b)=>a.date.localeCompare(b.date));
+  const dailyMap={};
+  sorted.forEach(r=>{if(!dailyMap[r.date])dailyMap[r.date]=0;dailyMap[r.date]+=r.profit});
+  let cumul=0;
+  const data=Object.keys(dailyMap).sort().map(d=>{cumul+=dailyMap[d];return{date:d,cumulative:cumul}});
+  let labels=[],vals=[];
+  if(v==='day'){labels=data.map(d=>d.date);vals=data.map(d=>d.cumulative)}
+  else{const m={};data.forEach(d=>{m[d.date.slice(0,7)]=d.cumulative});labels=Object.keys(m).sort();vals=labels.map(k=>m[k])}
+  const ctx=document.getElementById('planProfitChart');
+  if(!ctx)return;
+  if(window._planChart)window._planChart.destroy();
+  window._planChart=new Chart(ctx,{type:'line',data:{labels,datasets:[{data:vals,borderColor:'#f59e0b',backgroundColor:'rgba(245,158,11,.1)',fill:true,tension:.3,pointRadius:4,pointBackgroundColor:'#f59e0b'}]},options:{responsive:true,plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(17,24,39,.9)',titleColor:'#f9fafb',bodyColor:'#f59e0b',callbacks:{label:c=>'¥'+c.parsed.y.toFixed(2)}}},scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#6b7280',maxTicksLimit:8}},y:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#6b7280',callback:v=>'¥'+v}}}}});
+}
+let _planCalProfitMap={};
+function renderPlanCal(i,v,el){
+  if(el){el.parentElement.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active')}
+  window._planCalView=v;
+  const p=plans[i];
+  _planCalProfitMap={};
+  p.records.filter(r=>r.result).forEach(r=>{if(!_planCalProfitMap[r.date])_planCalProfitMap[r.date]=0;_planCalProfitMap[r.date]+=r.profit});
+  const c=document.getElementById('planCalendar'),t=document.getElementById('planCalTitle');
+  if(v==='year')renderPlanYear(c,t);
+  else if(v==='week')renderPlanWeek(c,t);
+  else renderPlanDay(c,t);
+}
+function navPlanCal(d){
+  if(window._planCalView==='year')window._planCalDate.setFullYear(window._planCalDate.getFullYear()+d);
+  else if(window._planCalView==='week')window._planCalDate.setDate(window._planCalDate.getDate()+d*7*30);
+  else window._planCalDate.setMonth(window._planCalDate.getMonth()+d);
+  renderPlanCal(window._currentPlanIdx,window._planCalView);
+}
+function renderPlanYear(c,t){
+  const y=window._planCalDate.getFullYear();
+  t.textContent=y+'年';
+  let h='<div class="year-grid">';
+  for(let m=0;m<12;m++){
+    let mp=0;const dim=new Date(y,m+1,0).getDate();
+    for(let d=1;d<=dim;d++){const ds=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');if(_planCalProfitMap[ds])mp+=_planCalProfitMap[ds]}
+    const cls=mp>0?'profit-up':mp<0?'profit-down':'';
+    const txt=mp!==0?(mp>0?'+':'')+mp.toFixed(0):'-';
+    h+='<div class="year-box '+cls+'" onclick="jumpPlanMonth('+y+','+m+')"><div class="year-nm">'+(m+1)+'月</div><div class="year-pv '+(mp>0?'up':mp<0?'down':'')+'">'+txt+'</div></div>';
+  }
+  c.innerHTML=h+'</div>';
+}
+function jumpPlanMonth(y,m){window._planCalDate=new Date(y,m,1);window._planCalView='day';renderPlanCal(window._currentPlanIdx,'day')}
+function renderPlanWeek(c,t){
+  const cur=new Date(window._planCalDate),dow=cur.getDay(),start=new Date(cur);
+  start.setDate(cur.getDate()-dow-7*10);
+  const end=new Date(start);end.setDate(start.getDate()+7*20-1);
+  t.textContent=fmt(start)+' ~ '+fmt(end);
+  let h='<div class="week-grid">';
+  for(let w=0;w<20;w++){
+    const ws=new Date(start);ws.setDate(start.getDate()+w*7);
+    let wp=0;
+    for(let d=0;d<7;d++){const dt=new Date(ws);dt.setDate(ws.getDate()+d);const ds=fmt(dt);if(_planCalProfitMap[ds])wp+=_planCalProfitMap[ds]}
+    const cls=wp>0?'profit-up':wp<0?'profit-down':'';
+    const txt=wp!==0?(wp>0?'+':'')+wp.toFixed(0):'-';
+    h+="<div class='week-box "+cls+"' onclick='jumpPlanWeek(&quot;"+fmt(ws)+"&quot;)'><div class='week-rg'>"+(ws.getMonth()+1)+"/"+ws.getDate()+"</div><div class='week-pv "+(wp>0?"up":wp<0?"down":"")+"'>"+txt+"</div></div>";
+  }
+  c.innerHTML=h+'</div>';
+}
+function jumpPlanWeek(ds){window._planCalDate=new Date(ds);window._planCalView='day';renderPlanCal(window._currentPlanIdx,'day')}
+function renderPlanDay(c,t){
+  const y=window._planCalDate.getFullYear(),m=window._planCalDate.getMonth();
+  t.textContent=y+'年'+(m+1)+'月';
+  const first=new Date(y,m,1),last=new Date(y,m+1,0),start=first.getDay();
+  let h='<div class="day-grid"><div class="day-hd">日</div><div class="day-hd">一</div><div class="day-hd">二</div><div class="day-hd">三</div><div class="day-hd">四</div><div class="day-hd">五</div><div class="day-hd">六</div>';
+  for(let i=0;i<start;i++)h+='<div class="day-cell"></div>';
+  for(let d=1;d<=last.getDate();d++){
+    const ds=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const p=_planCalProfitMap[ds],cls=p>0?'profit-up':p<0?'profit-down':'',txt=p!==undefined?(p>0?'+':'')+p.toFixed(0):'';
+    h+='<div class="day-cell '+cls+'"><span class="day-num">'+d+'</span><span class="day-pv '+(p>0?'up':p<0?'down':'')+'">'+txt+'</span></div>';
+  }
+  c.innerHTML=h+'</div>';
 }
 function hidePlan(){document.getElementById('planDetail').classList.remove('active');document.querySelectorAll('#pagePlans .plan').forEach(p=>p.style.display='')}
+function renderRecordsTable(){
+  const tbody=document.getElementById('recordsTable');
+  if(!tbody)return;
+  const now=new Date();
+  const currentMonth=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  const allRecs=[];
+  plans.forEach(p=>{p.records.forEach(r=>{allRecs.push({...r,planName:p.name,planType:p.type})})});
+  allRecs.sort((a,b)=>b.date.localeCompare(a.date));
+  const groups={};
+  allRecs.forEach(r=>{const m=r.date.substring(0,7);if(!groups[m])groups[m]=[];groups[m].push(r)});
+  const months=Object.keys(groups).sort().reverse();
+  let h='';
+  months.forEach(m=>{
+    const recs=groups[m];
+    const isCurrent=m===currentMonth;
+    let tb=0,tp=0;
+    recs.forEach(r=>{tb+=r.betAmount;if(r.result)tp+=r.profit});
+    const [y,mon]=m.split('-');
+    const pc=tp>0?'up':tp<0?'down':'';
+    h+='<tr class="month-header'+(isCurrent?' expanded':'')+'" id="hdr-'+m+'" onclick="toggleRecGroup(''+m+'')"><td colspan="6"><div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer"><div class="month-label"><span class="arrow">▶</span> <span>'+y+'年'+parseInt(mon)+'月</span></div><div class="month-stats"><span>'+recs.length+'条</span> <span>本金 ¥'+tb.toFixed(0)+'</span> <span class="'+pc+'">净收益 ¥'+tp.toFixed(0)+'</span></div></div></td></tr>';
+    recs.forEach(r=>{
+      const hid=isCurrent?'':' hidden';
+      h+='<tr class="rec-row grp-'+m+hid+'"><td>'+r.date+'</td><td>'+r.planName+'</td><td>¥'+r.betAmount.toFixed(2)+'</td><td class="'+(r.result==='win'?'up':r.result==='lose'?'down':'')+'">'+(r.result==='win'?'中':r.result==='lose'?'未中':'未结算')+'</td><td>'+(r.winAmount>0?'¥'+r.winAmount.toFixed(2):'-')+'</td><td class="'+(r.profit>0?'up':r.profit<0?'down':'')+'">'+(r.result?'¥'+r.profit.toFixed(2):'-')+'</td></tr>';
+    });
+  });
+  tbody.innerHTML=h;
+}
+function toggleRecGroup(m){
+  const hdr=document.getElementById('hdr-'+m);
+  const rows=document.querySelectorAll('.grp-'+m);
+  hdr.classList.toggle('expanded');
+  rows.forEach(r=>r.classList.toggle('hidden'));
+}
 
 function switchChart(v,el){
   el.parentElement.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
