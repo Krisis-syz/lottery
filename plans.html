@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>所有计划</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/supabase.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>所有计划</h1>
+      <button class="theme-toggle" onclick="toggleTheme()" title="切换主题">
+        <span id="themeIcon">☀️</span>
+      </button>
+    </header>
+
+    <section class="plans-section">
+      <div class="section-header">
+        <h2>投资计划</h2>
+        <div>
+          <button class="btn btn-primary" onclick="showCreateModal()">新建计划</button>
+        </div>
+      </div>
+      <div class="plans-grid" id="plansGrid">
+      </div>
+    </section>
+  </div>
+
+  <!-- 创建计划弹窗 -->
+  <div class="modal" id="createModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>新建投资计划</h3>
+        <button class="btn-close" onclick="hideCreateModal()">&times;</button>
+      </div>
+      <form id="createForm">
+        <div class="form-group">
+          <label for="planName">计划名称</label>
+          <input type="text" id="planName" required placeholder="输入计划名称">
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn" onclick="hideCreateModal()">取消</button>
+          <button type="submit" class="btn btn-primary">创建</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <a href="index.html" class="nav-item"><span class="nav-icon">🏠</span>主页</a>
+    <a href="plans.html" class="nav-item active"><span class="nav-icon">📋</span>计划</a>
+    <a href="history.html" class="nav-item"><span class="nav-icon">📊</span>历史</a>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/plans.js"></script>
+</body>
+</html>
