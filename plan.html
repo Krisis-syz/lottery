@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>计划详情</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="js/supabase.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>计划详情</h1>
+      <button class="theme-toggle" onclick="toggleTheme()" title="切换主题">
+        <span id="themeIcon">☀️</span>
+      </button>
+    </header>
+
+    <!-- 计划总览 + 操作 -->
+    <section class="summary-main-card" style="margin-bottom: 20px;">
+      <div class="plan-info-row" style="margin-bottom: 12px;">
+        <span class="plan-name" id="planName"></span>
+        <span class="plan-status" id="planStatus"></span>
+        <button class="btn btn-sm" id="toggleStatusBtn" onclick="toggleStatus()"></button>
+      </div>
+      <div class="summary-top">
+        <span class="summary-label">总利润(元)</span>
+        <div class="summary-big-value" id="planTotalProfit">0</div>
+      </div>
+      <div class="summary-bottom" style="margin-bottom: 14px;">
+        <div class="summary-col">
+          <div class="summary-col-label">昨日利润</div>
+          <div class="summary-col-value" id="planYesterdayProfit">-</div>
+        </div>
+        <div class="summary-col">
+          <div class="summary-col-label">昨日投入</div>
+          <div class="summary-col-value dark" id="planYesterdayInvested">-</div>
+        </div>
+        <div class="summary-col">
+          <div class="summary-col-label">累计投入</div>
+          <div class="summary-col-value dark" id="planTotalInvested">0</div>
+        </div>
+      </div>
+      <form id="addRecordForm" class="add-record-form" style="border-top: 1px solid var(--glass-border); padding-top: 12px;">
+        <input type="date" id="recordDate" required>
+        <input type="number" id="betAmount" required min="0" step="2" placeholder="投注金额">
+        <button type="submit" class="btn btn-primary btn-sm">添加</button>
+      </form>
+    </section>
+
+    <!-- 投注记录表格 -->
+    <section class="card">
+      <h3 style="margin-bottom: 16px;">投注记录</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>日期</th>
+              <th>投注</th>
+              <th>结果</th>
+              <th>中奖</th>
+              <th>净利润</th>
+            </tr>
+          </thead>
+          <tbody id="recordsTable">
+          </tbody>
+        </table>
+      </div>
+      <div class="empty-state" id="emptyRecords" style="display:none;">
+        <p>暂无投注记录</p>
+      </div>
+    </section>
+
+    <!-- 收益趋势图 -->
+    <section class="chart-container">
+      <div class="chart-header">
+        <h3>收益趋势</h3>
+        <div class="chart-tabs">
+          <button class="chart-tab active" onclick="switchPlanChartView('day')">日</button>
+          <button class="chart-tab" onclick="switchPlanChartView('month')">月</button>
+        </div>
+      </div>
+      <div class="chart-wrapper">
+        <canvas id="planProfitChart"></canvas>
+      </div>
+    </section>
+
+    <!-- 收益日历 -->
+    <section class="chart-container">
+      <div class="chart-header">
+        <h3>收益日历</h3>
+        <div class="chart-tabs">
+          <button class="chart-tab active" onclick="switchPlanCalendarView('day')">日</button>
+          <button class="chart-tab" onclick="switchPlanCalendarView('month')">月</button>
+          <button class="chart-tab" onclick="switchPlanCalendarView('year')">年</button>
+        </div>
+      </div>
+      <div id="planCalendarNav" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <button class="btn btn-sm" onclick="navigatePlanCalendar(-1)">&lt; 上一个</button>
+        <span id="planCalendarTitle"></span>
+        <button class="btn btn-sm" onclick="navigatePlanCalendar(1)">下一个 &gt;</button>
+      </div>
+      <div id="planCalendarContainer"></div>
+    </section>
+  </div>
+
+  <!-- 更新结果弹窗 -->
+  <div class="modal" id="resultModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>填写投注结果</h3>
+        <button class="btn-close" onclick="hideResultModal()">&times;</button>
+      </div>
+      <form id="resultForm">
+        <input type="hidden" id="resultDate">
+        <div class="form-group">
+          <label>投注结果</label>
+          <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <button type="button" class="btn btn-success" onclick="selectResult('win')">中</button>
+            <button type="button" class="btn btn-danger" onclick="selectResult('lose')">未中</button>
+          </div>
+        </div>
+        <div class="form-group" id="winAmountGroup" style="display:none;">
+          <label for="winAmount">中奖金额</label>
+          <input type="number" id="winAmount" min="0" step="0.01" placeholder="输入中奖金额">
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn" onclick="hideResultModal()">取消</button>
+          <button type="submit" class="btn btn-primary">确认</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 修改金额弹窗 -->
+  <div class="modal" id="editAmountModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>修改投注金额</h3>
+        <button class="btn-close" onclick="hideEditAmountModal()">&times;</button>
+      </div>
+      <form id="editAmountForm">
+        <input type="hidden" id="editAmountDate">
+        <div class="form-group">
+          <label for="newBetAmount">投注金额</label>
+          <input type="number" id="newBetAmount" required min="0" step="2" placeholder="输入新的投注金额">
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn" onclick="hideEditAmountModal()">取消</button>
+          <button type="submit" class="btn btn-primary">确认</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 长按上下文菜单 -->
+  <div class="context-menu" id="contextMenu">
+    <button class="context-menu-item" id="ctxEditAmount">修改金额</button>
+    <button class="context-menu-item" id="ctxFillResult">填写结果</button>
+  </div>
+
+  <div class="bottom-nav">
+    <a href="index.html" class="nav-item"><span class="nav-icon">🏠</span>主页</a>
+    <a href="plans.html" class="nav-item"><span class="nav-icon">📋</span>计划</a>
+    <a href="history.html" class="nav-item"><span class="nav-icon">📊</span>历史</a>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/plan.js"></script>
+</body>
+</html>
