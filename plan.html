@@ -15,66 +15,55 @@
   <div class="container">
     <header>
       <h1>计划详情</h1>
-      <nav>
-        <a href="/">主页</a>
-        <a href="/history.html">历史</a>
-      </nav>
+      <button class="theme-toggle" onclick="toggleTheme()" title="切换主题">
+        <span id="themeIcon">☀️</span>
+      </button>
     </header>
-    <button class="theme-toggle" onclick="toggleTheme()" title="切换主题">
-      <span id="themeIcon">☀️</span>
-    </button>
 
-    <!-- 计划信息 -->
-    <section class="card" style="margin-bottom: 30px;">
-      <div id="planInfo">
-        <div class="plan-header">
-          <span class="plan-name" id="planName"></span>
-          <div>
-            <span class="plan-type" id="planType"></span>
-            <span class="plan-status" id="planStatus"></span>
-            <button class="btn btn-sm" id="toggleStatusBtn" onclick="toggleStatus()"></button>
-          </div>
+    <!-- 计划总览 + 操作 -->
+    <section class="summary-main-card" style="margin-bottom: 20px;">
+      <div class="plan-info-row" style="margin-bottom: 12px;">
+        <span class="plan-name" id="planName"></span>
+        <span class="plan-status" id="planStatus"></span>
+        <button class="btn btn-sm" id="toggleStatusBtn" onclick="toggleStatus()"></button>
+      </div>
+      <div class="summary-top">
+        <span class="summary-label">总利润(元)</span>
+        <div class="summary-big-value" id="planTotalProfit">0</div>
+      </div>
+      <div class="summary-bottom" style="margin-bottom: 14px;">
+        <div class="summary-col">
+          <div class="summary-col-label">昨日利润</div>
+          <div class="summary-col-value" id="planYesterdayProfit">-</div>
         </div>
-        <div id="initialAmountInfo" style="display:none; margin-top: 15px;">
-          <strong>初始本金:</strong> <span id="initialAmount"></span>
+        <div class="summary-col">
+          <div class="summary-col-label">昨日投入</div>
+          <div class="summary-col-value dark" id="planYesterdayInvested">-</div>
+        </div>
+        <div class="summary-col">
+          <div class="summary-col-label">累计投入</div>
+          <div class="summary-col-value dark" id="planTotalInvested">0</div>
         </div>
       </div>
-    </section>
-
-    <!-- 添加投注记录 -->
-    <section class="card" style="margin-bottom: 30px;">
-      <h3 style="margin-bottom: 20px;">添加投注记录</h3>
-      <div id="recommendation" class="recommendation" style="display:none;"></div>
-      <form id="addRecordForm">
-        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-          <div class="form-group" style="flex: 1; min-width: 150px;">
-            <label for="recordDate">日期</label>
-            <input type="date" id="recordDate" required>
-          </div>
-          <div class="form-group" style="flex: 1; min-width: 150px;">
-            <label for="betAmount">投注金额</label>
-            <input type="number" id="betAmount" required min="0" step="2" placeholder="输入投注金额">
-          </div>
-          <div class="form-group" style="display: flex; align-items: flex-end;">
-            <button type="submit" class="btn btn-primary">添加记录</button>
-          </div>
-        </div>
+      <form id="addRecordForm" class="add-record-form" style="border-top: 1px solid var(--glass-border); padding-top: 12px;">
+        <input type="date" id="recordDate" required>
+        <input type="number" id="betAmount" required min="0" step="2" placeholder="投注金额">
+        <button type="submit" class="btn btn-primary btn-sm">添加</button>
       </form>
     </section>
 
-    <!-- 历史记录表格 -->
+    <!-- 投注记录表格 -->
     <section class="card">
-      <h3 style="margin-bottom: 20px;">投注记录</h3>
+      <h3 style="margin-bottom: 16px;">投注记录</h3>
       <div class="table-container">
         <table>
           <thead>
             <tr>
               <th>日期</th>
-              <th>投注金额</th>
+              <th>投注</th>
               <th>结果</th>
-              <th>中奖金额</th>
+              <th>中奖</th>
               <th>净利润</th>
-              <th>操作</th>
             </tr>
           </thead>
           <tbody id="recordsTable">
@@ -95,16 +84,18 @@
           <button class="chart-tab" onclick="switchPlanChartView('month')">月</button>
         </div>
       </div>
-      <canvas id="planProfitChart" height="80"></canvas>
+      <div class="chart-wrapper">
+        <canvas id="planProfitChart"></canvas>
+      </div>
     </section>
 
-    <!-- 日历图 -->
+    <!-- 收益日历 -->
     <section class="chart-container">
       <div class="chart-header">
         <h3>收益日历</h3>
         <div class="chart-tabs">
           <button class="chart-tab active" onclick="switchPlanCalendarView('day')">日</button>
-          <button class="chart-tab" onclick="switchPlanCalendarView('week')">周</button>
+          <button class="chart-tab" onclick="switchPlanCalendarView('month')">月</button>
           <button class="chart-tab" onclick="switchPlanCalendarView('year')">年</button>
         </div>
       </div>
@@ -166,9 +157,16 @@
     </div>
   </div>
 
+  <!-- 长按上下文菜单 -->
+  <div class="context-menu" id="contextMenu">
+    <button class="context-menu-item" id="ctxEditAmount">修改金额</button>
+    <button class="context-menu-item" id="ctxFillResult">填写结果</button>
+  </div>
+
   <div class="bottom-nav">
-    <a href="/" class="nav-item"><span class="nav-icon">🏠</span>主页</a>
-    <a href="/history.html" class="nav-item"><span class="nav-icon">📊</span>历史</a>
+    <a href="index.html" class="nav-item"><span class="nav-icon">🏠</span>主页</a>
+    <a href="plans.html" class="nav-item"><span class="nav-icon">📋</span>计划</a>
+    <a href="history.html" class="nav-item"><span class="nav-icon">📊</span>历史</a>
   </div>
 
   <script src="js/api.js"></script>

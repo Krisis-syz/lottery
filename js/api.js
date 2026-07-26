@@ -71,7 +71,7 @@ function updateThemeIcon(theme) {
 }
 
 function initTheme() {
-  const savedTheme = localStorage.getItem('theme') || 'dark';
+  const savedTheme = localStorage.getItem('theme') || 'light';
   document.documentElement.setAttribute('data-theme', savedTheme);
   updateThemeIcon(savedTheme);
 }
@@ -173,8 +173,8 @@ const api = {
       .from('plans')
       .insert({
         name: data.name,
-        type: data.type,
-        initial_amount: data.initialAmount || null,
+        type: 'normal',
+        initial_amount: null,
         status: 'active'
       });
 
@@ -252,27 +252,6 @@ const api = {
     await waitForSupabase();
     const sb = getSupabase();
 
-    // 获取计划信息
-    const { data: plan, error: planError } = await sb
-      .from('plans')
-      .select('type, initial_amount')
-      .eq('id', planId)
-      .single();
-
-    if (planError) throw planError;
-
-    // 计算推荐倍数
-    let multiplier = null;
-    if (plan.type === 'martingale') {
-      const { data: records } = await sb
-        .from('records')
-        .select('*')
-        .eq('plan_id', planId)
-        .order('date', { ascending: true });
-
-      multiplier = getRecommendedMultiplier(records || [], plan.initial_amount);
-    }
-
     const { error } = await sb
       .from('records')
       .insert({
@@ -282,7 +261,7 @@ const api = {
         result: null,
         win_amount: 0,
         profit: 0,
-        multiplier
+        multiplier: null
       });
 
     if (error) throw error;
@@ -344,22 +323,22 @@ const api = {
       totalReturned += record.win_amount;
     });
 
-    // 计算上日汇总
+    // 计算昨日汇总（严格昨天）
     let yesterdaySummary = null;
-    if (records.length > 0) {
-      // 找最近一个有结算结果的日期
-      const settledRecords = records.filter(r => r.result);
-      if (settledRecords.length > 0) {
-        const lastDate = settledRecords[0].date;
-        const lastDayRecords = settledRecords.filter(r => r.date === lastDate);
-        let invested = 0, returned = 0, profit = 0;
-        lastDayRecords.forEach(r => {
-          invested += r.bet_amount;
-          returned += r.win_amount;
-          profit += r.profit;
-        });
-        yesterdaySummary = { date: lastDate, invested, returned, profit };
-      }
+    const now = new Date();
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+
+    const yesterdayRecords = records.filter(r => r.date === yesterdayStr);
+    if (yesterdayRecords.length > 0) {
+      let invested = 0, returned = 0, profit = 0;
+      yesterdayRecords.forEach(r => {
+        invested += r.bet_amount;
+        returned += r.win_amount;
+        profit += r.profit;
+      });
+      yesterdaySummary = { date: yesterdayStr, invested, returned, profit };
     }
 
     return {
@@ -420,25 +399,3 @@ const api = {
     };
   }
 };
-
-// 加注倍数序列
-const MARTINGALE_MULTIPLIERS = [1, 2, 3, 5, 8, 12, 18, 28, 46, 74];
-
-// 计算推荐倍数
-function getRecommendedMultiplier(records, initialAmount) {
-  if (!records || records.length === 0) return 1;
-
-  const lastRecord = records[records.length - 1];
-  if (lastRecord.result === 'win' || !lastRecord.result) return 1;
-
-  let consecutiveLosses = 0;
-  for (let i = records.length - 1; i >= 0; i--) {
-    if (records[i].result === 'lose') {
-      consecutiveLosses++;
-    } else {
-      break;
-    }
-  }
-
-  return MARTINGALE_MULTIPLIERS[Math.min(consecutiveLosses, MARTINGALE_MULTIPLIERS.length - 1)];
-}

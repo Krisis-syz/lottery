@@ -8,6 +8,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="投资计划">
+  <meta name="theme-color" content="#0a0e17">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="js/supabase.min.js"></script>
 </head>
@@ -15,14 +21,10 @@
   <div class="container">
     <header>
       <h1>历史记录</h1>
-      <nav>
-        <a href="/">主页</a>
-        <a href="/history.html" class="active">历史</a>
-      </nav>
+      <button class="theme-toggle" onclick="toggleTheme()" title="切换主题">
+        <span id="themeIcon">☀️</span>
+      </button>
     </header>
-    <button class="theme-toggle" onclick="toggleTheme()" title="切换主题">
-      <span id="themeIcon">☀️</span>
-    </button>
 
     <!-- 总净收益折线图 -->
     <section class="chart-container">
@@ -34,16 +36,18 @@
           <button class="chart-tab" onclick="switchChartView('year')">年</button>
         </div>
       </div>
-      <canvas id="profitChart" height="80"></canvas>
+      <div class="chart-wrapper">
+        <canvas id="profitChart"></canvas>
+      </div>
     </section>
 
-    <!-- 日历图 -->
+    <!-- 收益日历 -->
     <section class="chart-container">
       <div class="chart-header">
         <h3>收益日历</h3>
         <div class="chart-tabs">
           <button class="chart-tab active" onclick="switchCalendarView('day')">日</button>
-          <button class="chart-tab" onclick="switchCalendarView('week')">周</button>
+          <button class="chart-tab" onclick="switchCalendarView('month')">月</button>
           <button class="chart-tab" onclick="switchCalendarView('year')">年</button>
         </div>
       </div>
@@ -55,19 +59,22 @@
       <div id="calendarContainer"></div>
     </section>
 
-    <!-- 历史记录表格 -->
+    <!-- 收益明细 -->
     <section class="card history-section">
-      <h3 style="margin-bottom: 20px;">投注记录明细</h3>
+      <div class="section-title">
+        <h3>收益明细</h3>
+        <span class="section-date" id="recordsDate"></span>
+        <span class="sort-toggle" id="sortProfitBtn" onclick="toggleSortByProfit()">
+          盈亏排序<span class="sort-arrows"><span class="sort-arrow" id="sortArrowAsc">▲</span><span class="sort-arrow" id="sortArrowDesc">▼</span></span>
+        </span>
+      </div>
       <div class="table-container">
         <table>
           <thead>
             <tr>
-              <th>日期</th>
               <th>计划</th>
-              <th>类型</th>
               <th>投注</th>
               <th>结果</th>
-              <th>中奖</th>
               <th>净利润</th>
             </tr>
           </thead>
@@ -76,14 +83,15 @@
         </table>
       </div>
       <div class="empty-state" id="emptyHistory" style="display:none;">
-        <p>暂无历史记录</p>
+        <p>暂无记录</p>
       </div>
     </section>
   </div>
 
   <div class="bottom-nav">
-    <a href="/" class="nav-item"><span class="nav-icon">🏠</span>主页</a>
-    <a href="/history.html" class="nav-item active"><span class="nav-icon">📊</span>历史</a>
+    <a href="index.html" class="nav-item"><span class="nav-icon">🏠</span>主页</a>
+    <a href="plans.html" class="nav-item"><span class="nav-icon">📋</span>计划</a>
+    <a href="history.html" class="nav-item active"><span class="nav-icon">📊</span>历史</a>
   </div>
 
   <script src="js/api.js"></script>

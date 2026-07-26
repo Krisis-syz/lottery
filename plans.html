@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>体彩投资计划</title>
+  <title>所有计划</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -19,44 +19,20 @@
 <body>
   <div class="container">
     <header>
-      <h1>体彩投资计划</h1>
+      <h1>所有计划</h1>
       <button class="theme-toggle" onclick="toggleTheme()" title="切换主题">
         <span id="themeIcon">☀️</span>
       </button>
     </header>
 
-    <!-- 总览卡片 -->
-    <section class="summary-main-card">
-      <div class="summary-top">
-        <span class="summary-label">总利润(元)</span>
-        <div class="summary-big-value" id="totalProfit">0</div>
-      </div>
-      <div class="summary-bottom">
-        <div class="summary-col">
-          <div class="summary-col-label">昨日利润</div>
-          <div class="summary-col-value" id="lastDayProfit">-</div>
-        </div>
-        <div class="summary-col">
-          <div class="summary-col-label">昨日投入</div>
-          <div class="summary-col-value dark" id="lastDayInvested">-</div>
-        </div>
-        <div class="summary-col">
-          <div class="summary-col-label">累计投入</div>
-          <div class="summary-col-value dark" id="totalInvested">0</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 进行中计划 -->
     <section class="plans-section">
       <div class="section-header">
-        <h2>进行中计划</h2>
+        <h2>投资计划</h2>
         <div>
           <button class="btn btn-primary" onclick="showCreateModal()">新建计划</button>
         </div>
       </div>
       <div class="plans-grid" id="plansGrid">
-        <!-- 计划卡片将在这里动态生成 -->
       </div>
     </section>
   </div>
@@ -82,12 +58,12 @@
   </div>
 
   <div class="bottom-nav">
-    <a href="index.html" class="nav-item active"><span class="nav-icon">🏠</span>主页</a>
-    <a href="plans.html" class="nav-item"><span class="nav-icon">📋</span>计划</a>
+    <a href="index.html" class="nav-item"><span class="nav-icon">🏠</span>主页</a>
+    <a href="plans.html" class="nav-item active"><span class="nav-icon">📋</span>计划</a>
     <a href="history.html" class="nav-item"><span class="nav-icon">📊</span>历史</a>
   </div>
 
   <script src="js/api.js"></script>
-  <script src="js/index.js"></script>
+  <script src="js/plans.js"></script>
 </body>
 </html>
