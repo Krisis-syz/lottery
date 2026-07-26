@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>历史记录</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="js/supabase.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>历史记录</h1>
+      <nav>
+        <a href="/">主页</a>
+        <a href="/history.html" class="active">历史</a>
+      </nav>
+    </header>
+    <button class="theme-toggle" onclick="toggleTheme()" title="切换主题">
+      <span id="themeIcon">☀️</span>
+    </button>
+
+    <!-- 总净收益折线图 -->
+    <section class="chart-container">
+      <div class="chart-header">
+        <h3>总净收益趋势</h3>
+        <div class="chart-tabs">
+          <button class="chart-tab active" onclick="switchChartView('day')">日</button>
+          <button class="chart-tab" onclick="switchChartView('month')">月</button>
+          <button class="chart-tab" onclick="switchChartView('year')">年</button>
+        </div>
+      </div>
+      <canvas id="profitChart" height="80"></canvas>
+    </section>
+
+    <!-- 日历图 -->
+    <section class="chart-container">
+      <div class="chart-header">
+        <h3>收益日历</h3>
+        <div class="chart-tabs">
+          <button class="chart-tab active" onclick="switchCalendarView('day')">日</button>
+          <button class="chart-tab" onclick="switchCalendarView('week')">周</button>
+          <button class="chart-tab" onclick="switchCalendarView('year')">年</button>
+        </div>
+      </div>
+      <div id="calendarNav" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <button class="btn btn-sm" onclick="navigateCalendar(-1)">&lt; 上一个</button>
+        <span id="calendarTitle"></span>
+        <button class="btn btn-sm" onclick="navigateCalendar(1)">下一个 &gt;</button>
+      </div>
+      <div id="calendarContainer"></div>
+    </section>
+
+    <!-- 历史记录表格 -->
+    <section class="card history-section">
+      <h3 style="margin-bottom: 20px;">投注记录明细</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>日期</th>
+              <th>计划</th>
+              <th>类型</th>
+              <th>投注</th>
+              <th>结果</th>
+              <th>中奖</th>
+              <th>净利润</th>
+            </tr>
+          </thead>
+          <tbody id="historyTable">
+          </tbody>
+        </table>
+      </div>
+      <div class="empty-state" id="emptyHistory" style="display:none;">
+        <p>暂无历史记录</p>
+      </div>
+    </section>
+  </div>
+
+  <div class="bottom-nav">
+    <a href="/" class="nav-item"><span class="nav-icon">🏠</span>主页</a>
+    <a href="/history.html" class="nav-item active"><span class="nav-icon">📊</span>历史</a>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/history.js"></script>
+</body>
+</html>

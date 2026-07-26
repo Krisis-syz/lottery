@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>体彩投资计划</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/supabase.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>体彩投资计划</h1>
+      <nav>
+        <a href="/" class="active">主页</a>
+        <a href="/history.html">历史</a>
+      </nav>
+    </header>
+    <button class="theme-toggle" onclick="toggleTheme()" title="切换主题">
+      <span id="themeIcon">☀️</span>
+    </button>
+
+    <!-- 总览卡片 -->
+    <section class="summary-cards">
+      <div class="card summary-card">
+        <div class="card-label">总本金</div>
+        <div class="card-value" id="totalInvested">¥0</div>
+        <div class="card-sub" id="lastDayInvested"></div>
+      </div>
+      <div class="card summary-card">
+        <div class="card-label">总回收</div>
+        <div class="card-value" id="totalReturned">¥0</div>
+        <div class="card-sub" id="lastDayReturned"></div>
+      </div>
+      <div class="card summary-card">
+        <div class="card-label">总净收益</div>
+        <div class="card-value" id="totalProfit">¥0</div>
+        <div class="card-sub" id="lastDayProfit"></div>
+      </div>
+    </section>
+
+    <!-- 计划列表 -->
+    <section class="plans-section">
+      <div class="section-header">
+        <h2>投资计划</h2>
+        <div>
+          <button class="btn btn-primary" onclick="showCreateModal()">新建计划</button>
+        </div>
+      </div>
+      <div class="plans-grid" id="plansGrid">
+        <!-- 计划卡片将在这里动态生成 -->
+      </div>
+    </section>
+  </div>
+
+  <!-- 创建计划弹窗 -->
+  <div class="modal" id="createModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>新建投资计划</h3>
+        <button class="btn-close" onclick="hideCreateModal()">&times;</button>
+      </div>
+      <form id="createForm">
+        <div class="form-group">
+          <label for="planName">计划名称</label>
+          <input type="text" id="planName" required placeholder="输入计划名称">
+        </div>
+        <div class="form-group">
+          <label for="planType">计划类型</label>
+          <select id="planType" onchange="toggleInitialAmount()">
+            <option value="normal">普通</option>
+            <option value="martingale">加注</option>
+          </select>
+        </div>
+        <div class="form-group" id="initialAmountGroup" style="display:none">
+          <label for="initialAmount">初始本金</label>
+          <input type="number" id="initialAmount" placeholder="输入初始本金" min="1">
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn" onclick="hideCreateModal()">取消</button>
+          <button type="submit" class="btn btn-primary">创建</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+    <a href="/" class="nav-item active"><span class="nav-icon">🏠</span>主页</a>
+    <a href="/history.html" class="nav-item"><span class="nav-icon">📊</span>历史</a>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/index.js"></script>
+</body>
+</html>
