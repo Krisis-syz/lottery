@@ -69,7 +69,6 @@ async function loadPlans() {
         <div class="plan-card-compact" onclick="window.location.assign('${href}')">
           <div class="plan-compact-top">
             <span class="plan-compact-name">${plan.name}</span>
-            ${plan.loseStreak > 0 ? `<span class="plan-compact-streak">${plan.loseStreak}连黑</span>` : ''}
           </div>
           <div class="plan-compact-profit">
             <span class="plan-compact-label">总利润(元)</span>

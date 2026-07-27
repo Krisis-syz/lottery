@@ -53,7 +53,6 @@ async function loadPlans() {
               <div class="plan-compact-col-value">${formatNumber(plan.totalInvested)}</div>
             </div>
           </div>
-          ${plan.loseStreak > 0 ? `<div class="plan-compact-streak">${plan.loseStreak}连黑</div>` : ''}
         </div>
       `;
     }).join('');
