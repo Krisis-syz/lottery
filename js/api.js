@@ -78,12 +78,17 @@ function initTheme() {
 
 initTheme();
 
-// 密码验证
-const ADMIN_PASSWORD = '235711';
+// 密码验证（通过 Supabase 函数）
+async function verifyPassword(password) {
+  await waitForSupabase();
+  const sb = getSupabase();
+  const { data, error } = await sb.rpc('verify_password', { input_password: password });
+  if (error) throw error;
+  return data;
+}
 
-function checkPassword() {
-  const input = prompt('请输入操作密码：');
-  return input === ADMIN_PASSWORD;
+async function getPasswordInput() {
+  return prompt('请输入操作密码：');
 }
 
 // API 对象
@@ -164,7 +169,8 @@ const api = {
 
   // 创建计划
   createPlan: async (data) => {
-    if (!checkPassword()) throw new Error('密码错误');
+    const password = await getPasswordInput();
+    if (!password || !(await verifyPassword(password))) throw new Error('密码错误');
 
     await waitForSupabase();
     const sb = getSupabase();
@@ -222,7 +228,8 @@ const api = {
 
   // 更新计划状态
   updatePlanStatus: async (id) => {
-    if (!checkPassword()) throw new Error('密码错误');
+    const password = await getPasswordInput();
+    if (!password || !(await verifyPassword(password))) throw new Error('密码错误');
 
     await waitForSupabase();
     const sb = getSupabase();
@@ -247,7 +254,8 @@ const api = {
 
   // 添加投注记录
   addRecord: async (planId, data) => {
-    if (!checkPassword()) throw new Error('密码错误');
+    const password = await getPasswordInput();
+    if (!password || !(await verifyPassword(password))) throw new Error('密码错误');
 
     await waitForSupabase();
     const sb = getSupabase();
@@ -269,7 +277,8 @@ const api = {
 
   // 更新投注结果
   updateRecord: async (planId, recordId, data) => {
-    if (!checkPassword()) throw new Error('密码错误');
+    const password = await getPasswordInput();
+    if (!password || !(await verifyPassword(password))) throw new Error('密码错误');
 
     await waitForSupabase();
     const sb = getSupabase();
