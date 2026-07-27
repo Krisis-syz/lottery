@@ -21,7 +21,10 @@ async function loadHistory() {
     historyData = await api.getHistory();
     renderProfitChart();
     renderCalendar();
-    showRecordsForDate(formatDate(new Date()));
+    // 默认展示昨天的记录
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    showRecordsForDate(formatDate(yesterday));
   } catch (error) {
     console.error('加载历史失败:', error);
   }
