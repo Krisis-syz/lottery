@@ -7,6 +7,16 @@ function formatNumber(n, showSign) {
 // 页面加载时获取数据
 document.addEventListener('DOMContentLoaded', async () => {
   await waitForSupabase();
+
+  // 检查登录状态
+  if (!requireAuth()) return;
+
+  // 显示用户邮箱
+  const user = getCurrentUser();
+  if (user) {
+    document.getElementById('userEmail').textContent = user.email;
+  }
+
   loadSummary();
   loadPlans();
 });

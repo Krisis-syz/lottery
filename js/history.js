@@ -12,6 +12,16 @@ let selectedMonth = null;
 // 页面加载
 document.addEventListener('DOMContentLoaded', async () => {
   await waitForSupabase();
+
+  // 检查登录状态
+  if (!requireAuth()) return;
+
+  // 显示用户邮箱
+  const user = getCurrentUser();
+  if (user) {
+    document.getElementById('userEmail').textContent = user.email;
+  }
+
   loadHistory();
 });
 

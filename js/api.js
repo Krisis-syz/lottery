@@ -78,17 +78,60 @@ function initTheme() {
 
 initTheme();
 
-// 密码验证（通过 Supabase 函数）
-async function verifyPassword(password) {
+// Auth 函数
+function getCurrentUser() {
+  const sb = getSupabase();
+  if (!sb) return null;
+  const { data: { user } } = sb.auth.getUser();
+  return user;
+}
+
+async function signUp(email, password) {
   await waitForSupabase();
   const sb = getSupabase();
-  const { data, error } = await sb.rpc('verify_password', { input_password: password });
+  const { data, error } = await sb.auth.signUp({
+    email,
+    password
+  });
+  if (error) throw error;
+
+  // 开发环境：如果邮箱确认关闭，用户直接登录
+  if (data.user && data.user.identities && data.user.identities.length === 0) {
+    throw new Error('该邮箱已注册');
+  }
+
+  return {
+    user: data.user,
+    needsConfirmation: data.user && data.user.identities && data.user.identities.length > 0 && !data.session
+  };
+}
+
+async function signIn(email, password) {
+  await waitForSupabase();
+  const sb = getSupabase();
+  const { data, error } = await sb.auth.signInWithPassword({
+    email,
+    password
+  });
   if (error) throw error;
   return data;
 }
 
-async function getPasswordInput() {
-  return prompt('请输入操作密码：');
+async function signOut() {
+  await waitForSupabase();
+  const sb = getSupabase();
+  const { error } = await sb.auth.signOut();
+  if (error) throw error;
+  window.location.href = 'login.html';
+}
+
+function requireAuth() {
+  const user = getCurrentUser();
+  if (!user) {
+    window.location.href = 'login.html';
+    return false;
+  }
+  return true;
 }
 
 // API 对象
@@ -173,8 +216,8 @@ const api = {
 
   // 创建计划
   createPlan: async (data) => {
-    const password = await getPasswordInput();
-    if (!password || !(await verifyPassword(password))) throw new Error('密码错误');
+    const user = getCurrentUser();
+    if (!user) throw new Error('请先登录');
 
     await waitForSupabase();
     const sb = getSupabase();
@@ -185,7 +228,8 @@ const api = {
         name: data.name,
         type: 'normal',
         initial_amount: null,
-        status: 'active'
+        status: 'active',
+        user_id: user.id
       });
 
     if (error) throw error;
@@ -232,8 +276,8 @@ const api = {
 
   // 更新计划状态
   updatePlanStatus: async (id) => {
-    const password = await getPasswordInput();
-    if (!password || !(await verifyPassword(password))) throw new Error('密码错误');
+    const user = getCurrentUser();
+    if (!user) throw new Error('请先登录');
 
     await waitForSupabase();
     const sb = getSupabase();
@@ -258,8 +302,8 @@ const api = {
 
   // 添加投注记录
   addRecord: async (planId, data) => {
-    const password = await getPasswordInput();
-    if (!password || !(await verifyPassword(password))) throw new Error('密码错误');
+    const user = getCurrentUser();
+    if (!user) throw new Error('请先登录');
 
     await waitForSupabase();
     const sb = getSupabase();
@@ -273,7 +317,8 @@ const api = {
         result: null,
         win_amount: 0,
         profit: 0,
-        multiplier: null
+        multiplier: null,
+        user_id: user.id
       });
 
     if (error) throw error;
@@ -281,8 +326,8 @@ const api = {
 
   // 更新投注结果
   updateRecord: async (planId, recordId, data) => {
-    const password = await getPasswordInput();
-    if (!password || !(await verifyPassword(password))) throw new Error('密码错误');
+    const user = getCurrentUser();
+    if (!user) throw new Error('请先登录');
 
     await waitForSupabase();
     const sb = getSupabase();

@@ -20,9 +20,13 @@
   <div class="container">
     <header>
       <h1>体彩投资计划</h1>
-      <button class="theme-toggle" onclick="toggleTheme()" title="切换主题">
-        <span id="themeIcon">☀️</span>
-      </button>
+      <div class="header-actions">
+        <span class="user-email" id="userEmail"></span>
+        <button class="btn btn-sm" onclick="signOut()">退出</button>
+        <button class="theme-toggle" onclick="toggleTheme()" title="切换主题">
+          <span id="themeIcon">☀️</span>
+        </button>
+      </div>
     </header>
 
     <!-- 总览卡片 -->

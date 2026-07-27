@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>登录 - 体彩投资计划</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="icon.png" type="image/png">
+  <meta name="theme-color" content="#0a0e17">
+  <script src="js/supabase.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="auth-container">
+      <div class="auth-card">
+        <h1 class="auth-title">体彩投资计划</h1>
+        <p class="auth-subtitle">登录以管理您的投资数据</p>
+
+        <!-- 登录表单 -->
+        <form id="loginForm" class="auth-form">
+          <div class="form-group">
+            <label for="loginEmail">邮箱</label>
+            <input type="email" id="loginEmail" required placeholder="请输入邮箱">
+          </div>
+          <div class="form-group">
+            <label for="loginPassword">密码</label>
+            <input type="password" id="loginPassword" required placeholder="请输入密码" minlength="6">
+          </div>
+          <div id="loginError" class="auth-error" style="display:none;"></div>
+          <button type="submit" class="btn btn-primary btn-block">登录</button>
+        </form>
+
+        <div class="auth-divider"><span>或</span></div>
+
+        <!-- 注册表单 -->
+        <form id="registerForm" class="auth-form" style="display:none;">
+          <div class="form-group">
+            <label for="registerEmail">邮箱</label>
+            <input type="email" id="registerEmail" required placeholder="请输入邮箱">
+          </div>
+          <div class="form-group">
+            <label for="registerPassword">密码</label>
+            <input type="password" id="registerPassword" required placeholder="请输入密码（至少6位）" minlength="6">
+          </div>
+          <div id="registerError" class="auth-error" style="display:none;"></div>
+          <div id="registerSuccess" class="auth-success" style="display:none;"></div>
+          <button type="submit" class="btn btn-primary btn-block">注册</button>
+        </form>
+
+        <div class="auth-switch">
+          <span id="switchText">没有账号？</span>
+          <button type="button" class="btn-link" id="switchBtn" onclick="toggleForm()">注册</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    // 如果已登录，跳转到主页
+    document.addEventListener('DOMContentLoaded', async () => {
+      await waitForSupabase();
+      const user = getCurrentUser();
+      if (user) {
+        window.location.href = 'index.html';
+      }
+    });
+
+    let isLoginMode = true;
+
+    function toggleForm() {
+      isLoginMode = !isLoginMode;
+      document.getElementById('loginForm').style.display = isLoginMode ? 'block' : 'none';
+      document.getElementById('registerForm').style.display = isLoginMode ? 'none' : 'block';
+      document.getElementById('switchText').textContent = isLoginMode ? '没有账号？' : '已有账号？';
+      document.getElementById('switchBtn').textContent = isLoginMode ? '注册' : '登录';
+      // 清除错误信息
+      hideError('loginError');
+      hideError('registerError');
+      document.getElementById('registerSuccess').style.display = 'none';
+    }
+
+    function showError(elementId, message) {
+      const el = document.getElementById(elementId);
+      el.textContent = message;
+      el.style.display = 'block';
+    }
+
+    function hideError(elementId) {
+      document.getElementById(elementId).style.display = 'none';
+    }
+
+    // 登录
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideError('loginError');
+
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+
+      try {
+        await signIn(email, password);
+        window.location.href = 'index.html';
+      } catch (error) {
+        showError('loginError', error.message || '登录失败');
+      }
+    });
+
+    // 注册
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideError('registerError');
+      document.getElementById('registerSuccess').style.display = 'none';
+
+      const email = document.getElementById('registerEmail').value;
+      const password = document.getElementById('registerPassword').value;
+
+      try {
+        const result = await signUp(email, password);
+        if (result.needsConfirmation) {
+          showError('registerError', '请查收邮箱确认链接');
+        } else {
+          document.getElementById('registerSuccess').textContent = '注册成功，正在跳转...';
+          document.getElementById('registerSuccess').style.display = 'block';
+          setTimeout(() => {
+            window.location.href = 'index.html';
+          }, 1000);
+        }
+      } catch (error) {
+        showError('registerError', error.message || '注册失败');
+      }
+    });
+  </script>
+</body>
+</html>
