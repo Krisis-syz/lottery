@@ -79,10 +79,10 @@ function initTheme() {
 initTheme();
 
 // Auth 函数
-function getCurrentUser() {
+async function getCurrentUser() {
   const sb = getSupabase();
   if (!sb) return null;
-  const { data: { user } } = sb.auth.getUser();
+  const { data: { user } } = await sb.auth.getUser();
   return user;
 }
 
@@ -125,8 +125,8 @@ async function signOut() {
   window.location.href = 'login.html';
 }
 
-function requireAuth() {
-  const user = getCurrentUser();
+async function requireAuth() {
+  const user = await getCurrentUser();
   if (!user) {
     window.location.href = 'login.html';
     return false;

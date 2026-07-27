@@ -63,7 +63,7 @@
     // 如果已登录，跳转到主页
     document.addEventListener('DOMContentLoaded', async () => {
       await waitForSupabase();
-      const user = getCurrentUser();
+      const user = await getCurrentUser();
       if (user) {
         window.location.href = 'index.html';
       }

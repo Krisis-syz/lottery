@@ -67,10 +67,10 @@
       await waitForSupabase();
 
       // 检查登录状态
-      if (!requireAuth()) return;
+      if (!(await requireAuth())) return;
 
       // 显示用户信息
-      const user = getCurrentUser();
+      const user = await getCurrentUser();
       if (user) {
         document.getElementById('userEmail').textContent = user.email;
         document.getElementById('userId').textContent = 'ID: ' + user.id.substring(0, 8) + '...';

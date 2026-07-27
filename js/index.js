@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await waitForSupabase();
 
   // 检查登录状态
-  if (!requireAuth()) return;
+  if (!(await requireAuth())) return;
 
   loadSummary();
   loadPlans();
