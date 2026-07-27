@@ -63,9 +63,7 @@ async function loadPlans() {
     grid.innerHTML = activePlans.map(plan => {
       const href = `plan.html?id=${plan.id}`;
       const profitClass = plan.totalProfit >= 0 ? 'positive' : 'negative';
-      const lastDayProfit = plan.lastSettledRecord ? plan.lastSettledRecord.profit : 0;
-      const lastDayProfitClass = lastDayProfit >= 0 ? 'positive' : 'negative';
-      const lastDayInvested = plan.lastSettledRecord ? plan.lastSettledRecord.betAmount : 0;
+      const lastDayProfitClass = plan.yesterdayProfit >= 0 ? 'positive' : 'negative';
 
       return `
         <div class="plan-card-compact" onclick="window.location.assign('${href}')">
@@ -80,11 +78,11 @@ async function loadPlans() {
           <div class="plan-compact-bottom">
             <div class="plan-compact-col">
               <div class="plan-compact-col-label">昨日利润</div>
-              <div class="plan-compact-col-value ${lastDayProfitClass}">${plan.lastSettledRecord ? formatNumber(lastDayProfit, true) : '-'}</div>
+              <div class="plan-compact-col-value ${lastDayProfitClass}">${plan.hasYesterdayData ? formatNumber(plan.yesterdayProfit, true) : '-'}</div>
             </div>
             <div class="plan-compact-col">
               <div class="plan-compact-col-label">昨日投入</div>
-              <div class="plan-compact-col-value">${plan.lastSettledRecord ? formatNumber(lastDayInvested) : '-'}</div>
+              <div class="plan-compact-col-value">${plan.hasYesterdayData ? formatNumber(plan.yesterdayInvested) : '-'}</div>
             </div>
             <div class="plan-compact-col">
               <div class="plan-compact-col-label">累计投入</div>

@@ -113,24 +113,30 @@ const api = {
     if (recordsError) throw recordsError;
 
     // 合并计划和记录，计算汇总
+    // 计算昨天日期
+    const now = new Date();
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+
     return plans.map(plan => {
       const planRecords = records.filter(r => r.plan_id === plan.id);
       let totalInvested = 0;
       let totalReturned = 0;
       let loseStreak = 0;
-      let lastSettledRecord = null;
-
-      // 找最近已结算的记录
-      for (let i = planRecords.length - 1; i >= 0; i--) {
-        if (planRecords[i].result) {
-          lastSettledRecord = planRecords[i];
-          break;
-        }
-      }
+      let yesterdayProfit = 0;
+      let yesterdayInvested = 0;
+      let hasYesterdayData = false;
 
       planRecords.forEach(record => {
         totalInvested += record.bet_amount;
         totalReturned += record.win_amount;
+        // 计算昨天的数据
+        if (record.date === yesterdayStr) {
+          hasYesterdayData = true;
+          yesterdayInvested += record.bet_amount;
+          if (record.result) yesterdayProfit += record.profit;
+        }
       });
 
       // 计算连黑次数
@@ -158,11 +164,9 @@ const api = {
         totalReturned,
         totalProfit: totalReturned - totalInvested,
         loseStreak,
-        lastSettledRecord: lastSettledRecord ? {
-          betAmount: lastSettledRecord.bet_amount,
-          winAmount: lastSettledRecord.win_amount,
-          profit: lastSettledRecord.profit
-        } : null
+        yesterdayProfit,
+        yesterdayInvested,
+        hasYesterdayData
       };
     }).sort((a, b) => a.status === 'paused' ? 1 : b.status === 'paused' ? -1 : 0);
   },
