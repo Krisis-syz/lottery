@@ -17,12 +17,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 检查登录状态
   if (!requireAuth()) return;
 
-  // 显示用户邮箱
-  const user = getCurrentUser();
-  if (user) {
-    document.getElementById('userEmail').textContent = user.email;
-  }
-
   const planId = getPlanId();
   if (!planId) return;
   try { await loadPlan(planId); } catch (e) { console.error('加载出错:', e); }
