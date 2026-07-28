@@ -437,17 +437,17 @@
 
   <script src="js/api.js"></script>
   <script>
-    console.log('脚本开始加载');
+    alert('脚本已加载');
     let selectedPlan = null;
     let consecutiveLosses = [];
     let totalLossAmount = 0;
 
     document.addEventListener('DOMContentLoaded', async () => {
-      console.log('页面加载完成');
+      alert('页面加载完成');
       await waitForSupabase();
-      console.log('Supabase SDK 已加载');
+      alert('Supabase 已加载');
       const authResult = await requireAuth();
-      console.log('认证结果:', authResult);
+      alert('认证结果: ' + authResult);
       if (!authResult) return;
       loadPlans();
     });
