@@ -483,22 +483,29 @@ function renderOverviewTable() {
     const lastYear = data.find(x => x.month === d.month.replace(/\d{4}/, m => String(Number(m) - 1)));
 
     let change = '-', mom = '-', yoy = '-';
+    let changeColor = '', momColor = '', yoyColor = '';
     if (prev) {
       const diff = d.total - prev.total;
-      change = `${diff >= 0 ? '+' : ''}¥${fmtNum(diff)}`;
-      if (prev.total > 0) mom = `${diff >= 0 ? '+' : ''}${((diff / prev.total) * 100).toFixed(1)}%`;
+      change = `${diff >= 0 ? '+' : '-'}¥${fmtNum(Math.abs(diff))}`;
+      changeColor = diff >= 0 ? 'var(--success)' : 'var(--danger)';
+      if (prev.total > 0) {
+        const momVal = (diff / prev.total * 100);
+        mom = `${momVal >= 0 ? '+' : ''}${momVal.toFixed(1)}%`;
+        momColor = momVal >= 0 ? 'var(--success)' : 'var(--danger)';
+      }
     }
     if (lastYear && lastYear.total > 0) {
-      yoy = `${((d.total - lastYear.total) / lastYear.total * 100).toFixed(1)}%`;
+      const yoyVal = ((d.total - lastYear.total) / lastYear.total * 100);
+      yoy = `${yoyVal >= 0 ? '+' : ''}${yoyVal.toFixed(1)}%`;
+      yoyColor = yoyVal >= 0 ? 'var(--success)' : 'var(--danger)';
     }
 
-    const diff = d.total - (prev?.total || 0);
     return `<tr>
       <td>${d.month}</td>
       <td class="mono">¥${fmtNum(d.total)}</td>
-      <td class="mono" style="color:${diff >= 0 ? 'var(--success)' : 'var(--danger)'}">${change}</td>
-      <td class="mono">${mom}</td>
-      <td class="mono">${yoy}</td>
+      <td class="mono" style="color:${changeColor}">${change}</td>
+      <td class="mono" style="color:${momColor}">${mom}</td>
+      <td class="mono" style="color:${yoyColor}">${yoy}</td>
     </tr>`;
   }).join('');
 
