@@ -9,6 +9,7 @@ let prevPieChart = null;
 let overviewMode = 'total';
 let activeReportMonth = null;
 let tableShowCount = 12;
+let trendRange = '1y'; // 'all', '3y', '1y'
 
 const COLORS = ['#f59e0b', '#3b82f6', '#10b981', '#8b5cf6', '#ef4444', '#06b6d4', '#f97316', '#ec4899'];
 
@@ -161,6 +162,7 @@ function updateOverviewVisibility() {
   const tableHead = document.getElementById('tableHead');
   const trendToggle = document.getElementById('trendToggle');
   const trendCard = document.getElementById('trendCard');
+  const trendRangeGroup = document.querySelector('.trend-range-group');
 
   if (overviewMode === 'type') {
     if (pieCard) pieCard.style.display = 'none';
@@ -169,12 +171,14 @@ function updateOverviewVisibility() {
     if (tableTitle) tableTitle.textContent = '月度明细';
     if (tableHead) tableHead.innerHTML = '<tr><th>月份</th><th>金额</th><th>占比</th><th>环比</th></tr>';
     if (trendToggle) trendToggle.style.display = 'flex';
+    if (trendRangeGroup) trendRangeGroup.style.display = 'none';
     if (trendCard) trendCard.style.display = 'block';
   } else if (overviewMode === 'month') {
     if (pieCard) pieCard.style.display = 'block';
     if (prevPieCard) prevPieCard.style.display = 'none';
     if (tableCard) tableCard.style.display = 'none';
     if (trendToggle) trendToggle.style.display = 'none';
+    if (trendRangeGroup) trendRangeGroup.style.display = 'none';
     if (trendCard) trendCard.style.display = 'none';
   } else {
     if (pieCard) pieCard.style.display = 'block';
@@ -183,11 +187,29 @@ function updateOverviewVisibility() {
     if (tableTitle) tableTitle.textContent = '月度明细';
     if (tableHead) tableHead.innerHTML = '<tr><th>月份</th><th>总额</th><th>收支</th><th>环比</th><th>同比</th></tr>';
     if (trendToggle) trendToggle.style.display = 'none';
+    if (trendRangeGroup) trendRangeGroup.style.display = 'flex';
     if (trendCard) trendCard.style.display = 'block';
   }
 }
 
 let trendActiveDataset = 0; // 0=金额, 1=占比
+
+function setTrendRange(range) {
+  trendRange = range;
+  document.querySelectorAll('.trend-range-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.range === range);
+  });
+  renderTrendChart();
+}
+
+function filterByRange(data) {
+  if (trendRange === 'all') return data;
+  const now = new Date();
+  const yearsBack = trendRange === '3y' ? 3 : 1;
+  const cutoff = new Date(now.getFullYear() - yearsBack, now.getMonth() + 1, 1);
+  const cutoffStr = `${cutoff.getFullYear()}-${String(cutoff.getMonth() + 1).padStart(2, '0')}`;
+  return data.filter(d => d.month >= cutoffStr);
+}
 
 function toggleTrendDataset(idx) {
   trendActiveDataset = idx;
@@ -284,34 +306,34 @@ function renderTrendChart() {
     return;
   }
 
-  let data = [];
-  if (overviewMode === 'total') {
-    const totals = getMonthlyTotals();
-    data = Object.entries(totals).map(([m, t]) => ({ month: m, value: t }));
-  } else {
-    const totals = getMonthlyTotals();
-    data = Object.entries(totals).map(([m, t]) => ({ month: m, value: t }));
-  }
-
+  const totals = getMonthlyTotals();
+  let data = Object.entries(totals).map(([m, t]) => ({ month: m, value: t }));
   data.sort((a, b) => a.month.localeCompare(b.month));
+  data = filterByRange(data);
 
-  trendChart = new Chart(ctx.getContext('2d'), {
+  const canvas = ctx.getContext('2d');
+  const gradient = canvas.createLinearGradient(0, 0, 0, 250);
+  gradient.addColorStop(0, 'rgba(245, 158, 11, 0.25)');
+  gradient.addColorStop(0.6, 'rgba(245, 158, 11, 0.08)');
+  gradient.addColorStop(1, 'rgba(245, 158, 11, 0.0)');
+
+  trendChart = new Chart(canvas, {
     type: 'line',
     data: {
       labels: data.map(d => d.month),
       datasets: [{
         data: data.map(d => d.value),
         borderColor: '#f59e0b',
-        backgroundColor: 'rgba(245, 158, 11, 0.08)',
-        fill: true, tension: 0.35, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2
+        backgroundColor: gradient,
+        fill: true, tension: 0.4, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2
       }]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
-        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { maxTicksLimit: 5, color: '#6b7280', font: { size: 10 } } },
-        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#6b7280', font: { size: 10 }, callback: v => '¥' + (v >= 1000 ? (v/1000).toFixed(1) + 'k' : v) } }
+        x: { grid: { color: 'rgba(128,128,128,0.1)' }, ticks: { maxTicksLimit: 6, color: '#6b7280', font: { size: 10 } } },
+        y: { grid: { color: 'rgba(128,128,128,0.1)' }, ticks: { color: '#6b7280', font: { size: 10 }, callback: v => '¥' + (v >= 1000 ? (v/1000).toFixed(1) + 'k' : v) } }
       }
     }
   });
@@ -335,7 +357,18 @@ function renderTypeTrendChart(ctx) {
     pct: totals[d.month] > 0 ? (d.value / totals[d.month] * 100) : 0
   }));
 
-  trendChart = new Chart(ctx.getContext('2d'), {
+  const canvas = ctx.getContext('2d');
+  const gradientGold = canvas.createLinearGradient(0, 0, 0, 250);
+  gradientGold.addColorStop(0, 'rgba(245, 158, 11, 0.25)');
+  gradientGold.addColorStop(0.6, 'rgba(245, 158, 11, 0.08)');
+  gradientGold.addColorStop(1, 'rgba(245, 158, 11, 0.0)');
+
+  const gradientBlue = canvas.createLinearGradient(0, 0, 0, 250);
+  gradientBlue.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
+  gradientBlue.addColorStop(0.6, 'rgba(59, 130, 246, 0.06)');
+  gradientBlue.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
+
+  trendChart = new Chart(canvas, {
     type: 'line',
     data: {
       labels: data.map(d => d.month),
@@ -344,8 +377,8 @@ function renderTypeTrendChart(ctx) {
           label: '金额',
           data: data.map(d => d.value),
           borderColor: '#f59e0b',
-          backgroundColor: 'rgba(245, 158, 11, 0.08)',
-          fill: true, tension: 0.35, pointRadius: 3, borderWidth: 2,
+          backgroundColor: gradientGold,
+          fill: true, tension: 0.4, pointRadius: 3, borderWidth: 2,
           yAxisID: 'y',
           hidden: trendActiveDataset !== 0
         },
@@ -353,8 +386,8 @@ function renderTypeTrendChart(ctx) {
           label: '占比',
           data: data.map(d => d.pct),
           borderColor: '#3b82f6',
-          backgroundColor: 'rgba(59, 130, 246, 0.08)',
-          fill: true, tension: 0.35, pointRadius: 3, borderWidth: 2,
+          backgroundColor: gradientBlue,
+          fill: true, tension: 0.4, pointRadius: 3, borderWidth: 2,
           borderDash: [5, 5],
           yAxisID: 'y1',
           hidden: trendActiveDataset !== 1
@@ -365,8 +398,8 @@ function renderTypeTrendChart(ctx) {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
-        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { maxTicksLimit: 5, color: '#6b7280', font: { size: 10 } } },
-        y: { type: 'linear', position: 'left', display: trendActiveDataset === 0, grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#f59e0b', font: { size: 10 }, callback: v => '¥' + (v >= 1000 ? (v/1000).toFixed(1) + 'k' : v) } },
+        x: { grid: { color: 'rgba(128,128,128,0.1)' }, ticks: { maxTicksLimit: 6, color: '#6b7280', font: { size: 10 } } },
+        y: { type: 'linear', position: 'left', display: trendActiveDataset === 0, grid: { color: 'rgba(128,128,128,0.1)' }, ticks: { color: '#f59e0b', font: { size: 10 }, callback: v => '¥' + (v >= 1000 ? (v/1000).toFixed(1) + 'k' : v) } },
         y1: { type: 'linear', position: 'left', display: trendActiveDataset === 1, grid: { drawOnChartArea: false }, ticks: { color: '#3b82f6', font: { size: 10 }, callback: v => v.toFixed(0) + '%' }, min: 0, max: 100 }
       }
     }

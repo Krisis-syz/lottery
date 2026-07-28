@@ -390,6 +390,45 @@
 
     .chart-wrap { position: relative; height: 200px; }
 
+    /* 趋势图头部 */
+    .trend-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .trend-title {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      flex-shrink: 0;
+    }
+
+    .trend-range-group {
+      display: flex;
+      gap: 4px;
+      margin-left: auto;
+    }
+
+    .trend-range-btn {
+      padding: 4px 10px;
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .trend-range-btn.active {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--gold);
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+
     /* 饼图布局 */
     .pie-row {
       display: flex;
@@ -654,8 +693,13 @@
 
       <!-- 趋势图 -->
       <div class="chart-card" id="trendCard">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-          <div class="chart-card-title" style="margin-bottom:0;">资金趋势</div>
+        <div class="trend-header">
+          <div class="trend-title">资产趋势图</div>
+          <div class="trend-range-group">
+            <button class="trend-range-btn" data-range="all" onclick="setTrendRange('all')">全部</button>
+            <button class="trend-range-btn" data-range="3y" onclick="setTrendRange('3y')">近三年</button>
+            <button class="trend-range-btn active" data-range="1y" onclick="setTrendRange('1y')">近一年</button>
+          </div>
           <div class="chart-tabs" id="trendToggle" style="display:none;">
             <button class="chart-tab active" onclick="toggleTrendDataset(0)">金额</button>
             <button class="chart-tab" onclick="toggleTrendDataset(1)">占比</button>
