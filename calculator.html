@@ -499,8 +499,14 @@
     function calculateConsecutiveLosses() {
       if (!selectedPlan || !selectedPlan.records) return;
 
-      // 按日期倒序排列
-      const sorted = [...selectedPlan.records].sort((a, b) => b.date.localeCompare(a.date));
+      // 按日期倒序排列，同一天中奖排在未中前面（中奖中断未中）
+      const sorted = [...selectedPlan.records].sort((a, b) => {
+        const cmp = b.date.localeCompare(a.date);
+        if (cmp !== 0) return cmp;
+        if (a.result === 'win' && b.result !== 'win') return -1;
+        if (a.result !== 'win' && b.result === 'win') return 1;
+        return 0;
+      });
       consecutiveLosses = [];
       totalLossAmount = 0;
 
@@ -577,18 +583,18 @@
       }
 
       container.innerHTML = `
-        <div class="info-card">
+        <div class="info-card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05)); border-color: rgba(16, 185, 129, 0.2);">
           <div class="info-row">
             <span class="info-label">连续未中</span>
-            <span class="info-value loss">${consecutiveLosses.length} 期</span>
+            <span class="info-value" style="color: #10b981;">${consecutiveLosses.length} 期</span>
           </div>
           <div class="info-row">
             <span class="info-label">累计本金</span>
-            <span class="info-value loss">¥${totalLossAmount.toLocaleString()}</span>
+            <span class="info-value" style="color: #10b981;">¥${totalLossAmount.toLocaleString()}</span>
           </div>
           <div class="info-row">
             <span class="info-label">最近一期</span>
-            <span class="info-value" style="font-size: 0.875rem;">${consecutiveLosses[0].date}</span>
+            <span class="info-value" style="font-size: 0.875rem; color: #10b981;">${consecutiveLosses[0].date}</span>
           </div>
         </div>
       `;
@@ -609,7 +615,7 @@
       container.innerHTML = consecutiveLosses.map(r => `
         <div class="loss-item">
           <span class="loss-item-date">${r.date}</span>
-          <span class="loss-item-amount">-¥${r.betAmount}</span>
+          <span class="loss-item-amount" style="color: #10b981;">-¥${r.betAmount}</span>
         </div>
       `).join('');
     }
