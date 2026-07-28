@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>跟单计算器</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="icon.png" type="image/png">
+  <link rel="apple-touch-icon" href="icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0a0e17">
+  <script src="js/supabase.min.js"></script>
+  <style>
+    /* 跟单计算器样式 */
+    .calc-container {
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    .calc-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .calc-header h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      background: linear-gradient(135deg, var(--gold), var(--gold-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .calc-header p {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      margin-top: 4px;
+    }
+
+    /* 步骤卡片 */
+    .step-card {
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 16px;
+      backdrop-filter: blur(20px);
+      transition: var(--transition);
+    }
+
+    .step-card.active {
+      border-color: var(--gold);
+      box-shadow: 0 0 20px var(--gold-glow);
+    }
+
+    .step-card.disabled {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .step-number {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: #000;
+      flex-shrink: 0;
+    }
+
+    .step-number.completed {
+      background: linear-gradient(135deg, #10b981, #059669);
+    }
+
+    .step-title {
+      font-size: 1rem;
+      font-weight: 500;
+    }
+
+    .step-subtitle {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    /* 选择器 */
+    .plan-selector {
+      width: 100%;
+      padding: 14px 16px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-size: 1rem;
+      font-family: inherit;
+      appearance: none;
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239ca3af' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 16px center;
+    }
+
+    .plan-selector:focus {
+      outline: none;
+      border-color: var(--gold);
+    }
+
+    /* 显示卡片 */
+    .info-card {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.05));
+      border: 1px solid rgba(245, 158, 11, 0.2);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      margin-top: 12px;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+    }
+
+    .info-row:not(:last-child) {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .info-label {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+    }
+
+    .info-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 500;
+      font-size: 1.1rem;
+    }
+
+    .info-value.gold {
+      color: var(--gold);
+    }
+
+    .info-value.loss {
+      color: #ef4444;
+    }
+
+    /* 输入组 */
+    .input-group {
+      margin-bottom: 16px;
+    }
+
+    .input-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .input-label {
+      display: block;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 14px 16px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-size: 1rem;
+      font-family: 'JetBrains Mono', monospace;
+      transition: var(--transition);
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px var(--gold-glow);
+    }
+
+    .input-field::placeholder {
+      color: var(--text-muted);
+      font-family: inherit;
+    }
+
+    .input-suffix {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+    }
+
+    /* 结果卡片 */
+    .result-card {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05));
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-top: 16px;
+      animation: fadeInUp 0.5s ease;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .result-title {
+      text-align: center;
+      font-size: 1rem;
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .result-item {
+      text-align: center;
+      padding: 16px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: var(--radius-sm);
+    }
+
+    .result-item-label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .result-item-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #10b981;
+    }
+
+    .result-item-unit {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    .result-tip {
+      text-align: center;
+      margin-top: 16px;
+      padding: 12px;
+      background: rgba(245, 158, 11, 0.1);
+      border-radius: var(--radius-sm);
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    /* 返回按钮 */
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      text-decoration: none;
+      margin-bottom: 20px;
+      transition: var(--transition);
+    }
+
+    .back-btn:hover {
+      color: var(--gold);
+    }
+
+    /* 历史记录 */
+    .history-section {
+      margin-top: 24px;
+    }
+
+    .history-title {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .loss-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .loss-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+    }
+
+    .loss-item-date {
+      color: var(--text-secondary);
+    }
+
+    .loss-item-amount {
+      font-family: 'JetBrains Mono', monospace;
+      color: #ef4444;
+    }
+
+    /* 空状态 */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-secondary);
+    }
+
+    .empty-state-icon {
+      font-size: 3rem;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .empty-state-text {
+      font-size: 0.875rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="profile.html" class="back-btn">← 返回</a>
+
+    <div class="calc-container">
+      <div class="calc-header">
+        <h2>跟单计算器</h2>
+        <p>智能计算回本投注金额</p>
+      </div>
+
+      <!-- 步骤1：选择计划 -->
+      <div class="step-card active" id="step1">
+        <div class="step-header">
+          <div class="step-number" id="step1Num">1</div>
+          <div>
+            <div class="step-title">选择计划</div>
+            <div class="step-subtitle">选择要计算的投资计划</div>
+          </div>
+        </div>
+        <select class="plan-selector" id="planSelect">
+          <option value="">请选择计划...</option>
+        </select>
+      </div>
+
+      <!-- 步骤2：连续亏损显示 -->
+      <div class="step-card disabled" id="step2">
+        <div class="step-header">
+          <div class="step-number" id="step2Num">2</div>
+          <div>
+            <div class="step-title">连续亏损</div>
+            <div class="step-subtitle">最近连续未中的本金总和</div>
+          </div>
+        </div>
+        <div id="lossInfo">
+          <div class="empty-state">
+            <div class="empty-state-icon">📊</div>
+            <div class="empty-state-text">请先选择计划</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 步骤3：输入赔率和目标 -->
+      <div class="step-card disabled" id="step3">
+        <div class="step-header">
+          <div class="step-number" id="step3Num">3</div>
+          <div>
+            <div class="step-title">输入参数</div>
+            <div class="step-subtitle">设置赔率和回本目标</div>
+          </div>
+        </div>
+        <div class="input-group">
+          <label class="input-label">新一期赔率</label>
+          <div class="input-wrapper">
+            <input type="number" class="input-field" id="oddsInput" placeholder="例如: 1.95" step="0.01" min="1.01">
+            <span class="input-suffix">倍</span>
+          </div>
+        </div>
+        <div class="input-group">
+          <label class="input-label">想要回本金额</label>
+          <div class="input-wrapper">
+            <input type="number" class="input-field" id="targetInput" placeholder="例如: 500" step="2" min="0">
+            <span class="input-suffix">元</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 步骤4：计算结果 -->
+      <div id="resultContainer"></div>
+
+      <!-- 连续亏损明细 -->
+      <div class="history-section" id="historySection" style="display: none;">
+        <div class="history-title">
+          <span>📋</span> 连续亏损明细
+        </div>
+        <div class="loss-list" id="lossList"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    let selectedPlan = null;
+    let consecutiveLosses = [];
+    let totalLossAmount = 0;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await waitForSupabase();
+      if (!(await requireAuth())) return;
+      loadPlans();
+    });
+
+    async function loadPlans() {
+      try {
+        const plans = await api.getPlans();
+        const select = document.getElementById('planSelect');
+        plans.forEach(plan => {
+          const option = document.createElement('option');
+          option.value = plan.id;
+          option.textContent = plan.name;
+          select.appendChild(option);
+        });
+      } catch (error) {
+        console.error('加载计划失败:', error);
+      }
+    }
+
+    document.getElementById('planSelect').addEventListener('change', async (e) => {
+      const planId = e.target.value;
+      if (!planId) {
+        resetSteps(2);
+        return;
+      }
+
+      try {
+        selectedPlan = await api.getPlan(planId);
+        calculateConsecutiveLosses();
+        activateStep(2);
+      } catch (error) {
+        console.error('加载计划详情失败:', error);
+      }
+    });
+
+    function calculateConsecutiveLosses() {
+      if (!selectedPlan || !selectedPlan.records) return;
+
+      const sorted = [...selectedPlan.records].sort((a, b) => b.date.localeCompare(a.date));
+      consecutiveLosses = [];
+      totalLossAmount = 0;
+
+      for (const record of sorted) {
+        if (record.result === 'lose') {
+          consecutiveLosses.push(record);
+          totalLossAmount += record.betAmount;
+        } else if (record.result === 'win') {
+          break;
+        } else {
+          break;
+        }
+      }
+
+      renderLossInfo();
+      renderLossList();
+
+      if (consecutiveLosses.length > 0) {
+        activateStep(3);
+      }
+    }
+
+    function renderLossInfo() {
+      const container = document.getElementById('lossInfo');
+
+      if (consecutiveLosses.length === 0) {
+        container.innerHTML = `
+          <div class="info-card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05)); border-color: rgba(16, 185, 129, 0.2);">
+            <div class="info-row">
+              <span class="info-label">状态</span>
+              <span class="info-value" style="color: #10b981;">最近有中奖 ✨</span>
+            </div>
+          </div>
+        `;
+        document.getElementById('step3').classList.add('disabled');
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="info-card">
+          <div class="info-row">
+            <span class="info-label">连续未中</span>
+            <span class="info-value loss">${consecutiveLosses.length} 期</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">累计本金</span>
+            <span class="info-value loss">¥${totalLossAmount.toLocaleString()}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">最近一期</span>
+            <span class="info-value" style="font-size: 0.875rem;">${consecutiveLosses[0].date}</span>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('step2Num').classList.add('completed');
+    }
+
+    function renderLossList() {
+      const container = document.getElementById('lossList');
+      const section = document.getElementById('historySection');
+
+      if (consecutiveLosses.length === 0) {
+        section.style.display = 'none';
+        return;
+      }
+
+      section.style.display = 'block';
+      container.innerHTML = consecutiveLosses.map(r => `
+        <div class="loss-item">
+          <span class="loss-item-date">${r.date}</span>
+          <span class="loss-item-amount">-¥${r.betAmount}</span>
+        </div>
+      `).join('');
+    }
+
+    function activateStep(stepNum) {
+      for (let i = 1; i <= 3; i++) {
+        const step = document.getElementById(`step${i}`);
+        if (i <= stepNum) {
+          step.classList.remove('disabled');
+          if (i < stepNum) {
+            document.getElementById(`step${i}Num`).classList.add('completed');
+          }
+        }
+      }
+    }
+
+    function resetSteps(fromStep) {
+      for (let i = fromStep; i <= 3; i++) {
+        const step = document.getElementById(`step${i}`);
+        step.classList.add('disabled');
+        document.getElementById(`step${i}Num`).classList.remove('completed');
+      }
+      document.getElementById('resultContainer').innerHTML = '';
+      document.getElementById('historySection').style.display = 'none';
+      consecutiveLosses = [];
+      totalLossAmount = 0;
+    }
+
+    // 实时计算
+    let calcTimeout;
+    function triggerCalc() {
+      clearTimeout(calcTimeout);
+      calcTimeout = setTimeout(calculate, 300);
+    }
+
+    document.getElementById('oddsInput').addEventListener('input', triggerCalc);
+    document.getElementById('targetInput').addEventListener('input', triggerCalc);
+
+    function calculate() {
+      const odds = parseFloat(document.getElementById('oddsInput').value);
+      const target = parseFloat(document.getElementById('targetInput').value) || 0;
+
+      if (!odds || odds <= 1 || consecutiveLosses.length === 0) {
+        document.getElementById('resultContainer').innerHTML = '';
+        return;
+      }
+
+      // 回本所需：覆盖 totalLossAmount
+      // 投入 x，中奖 x * odds，净赚 x * (odds - 1)
+      // 需要 x * (odds - 1) >= totalLossAmount
+      const breakEvenRaw = totalLossAmount / (odds - 1);
+      const breakEven = roundUpToEven(breakEvenRaw);
+
+      // 达到目标所需：覆盖 totalLossAmount + target
+      const targetRaw = (totalLossAmount + target) / (odds - 1);
+      const targetAmount = roundUpToEven(targetRaw);
+
+      const container = document.getElementById('resultContainer');
+      container.innerHTML = `
+        <div class="result-card">
+          <div class="result-title">💡 计算结果</div>
+          <div class="result-grid">
+            <div class="result-item">
+              <div class="result-item-label">回本投注</div>
+              <div class="result-item-value">¥${breakEven}</div>
+              <div class="result-item-unit">中奖净回 ¥${(breakEven * (odds - 1)).toFixed(0)}</div>
+            </div>
+            <div class="result-item">
+              <div class="result-item-label">目标投注</div>
+              <div class="result-item-value">¥${targetAmount}</div>
+              <div class="result-item-unit">中奖净回 ¥${(targetAmount * (odds - 1)).toFixed(0)}</div>
+            </div>
+          </div>
+          <div class="result-tip">
+            赔率 ${odds} 倍 · 连亏 ${consecutiveLosses.length} 期 · 本金 ¥${totalLossAmount.toLocaleString()}
+            ${target > 0 ? ` · 目标 +¥${target}` : ''}
+          </div>
+        </div>
+      `;
+
+      document.getElementById('step3Num').classList.add('completed');
+    }
+
+    // 向上取整到偶数
+    function roundUpToEven(num) {
+      const.ceil = Math.ceil(num);
+      return ceil % 2 === 0 ? ceil : ceil + 1;
+    }
+  </script>
+</body>
+</html>
