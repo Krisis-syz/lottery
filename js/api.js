@@ -1,11 +1,8 @@
-// API 配置
-const API_BASE_URL = 'https://lottery-api.louissyz.workers.dev';
-
-// Supabase 配置（用于登录）
+// Supabase 配置
 const SUPABASE_URL = 'https://wcstsltmdcmenxkepyzk.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Indjc3RzbHRtZGNtZW54a2VweXprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUwNjI4MTAsImV4cCI6MjEwMDYzODgxMH0.Hx6nJlZwcCyML7DaqDUUNRx-Po6K6bd6At6PeDVWJ5Q';
 
-// 初始化 Supabase 客户端（仅用于登录）
+// 初始化 Supabase 客户端
 let supabaseClient = null;
 
 function getSupabase() {
@@ -133,121 +130,256 @@ async function requireAuth() {
   return true;
 }
 
-// ============ API 请求函数 ============
-
-async function getAuthToken() {
-  const sb = getSupabase();
-  if (!sb) return null;
-  const { data: { session } } = await sb.auth.getSession();
-  return session?.access_token;
-}
-
-async function apiRequest(path, options = {}) {
-  const token = await getAuthToken();
-
-  const headers = {
-    'Content-Type': 'application/json',
-    ...options.headers
-  };
-
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || '请求失败');
-  }
-
-  return response.json();
-}
-
-// ============ 数据 API ============
+// ============ 数据 API（直连 Supabase）============
 
 const api = {
   // 获取所有计划
   getPlans: async () => {
-    const result = await apiRequest('/api/plans');
-    return result.plans;
+    const sb = getSupabase();
+    const { data: plans, error } = await sb
+      .from('plans')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    // 获取记录用于计算汇总
+    const { data: records } = await sb
+      .from('records')
+      .select('*')
+      .order('date', { ascending: true });
+
+    const now = new Date();
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = formatDate(yesterday);
+
+    return (plans || []).map(plan => {
+      const planRecords = (records || []).filter(r => r.plan_id === plan.id);
+      let totalInvested = 0, totalReturned = 0, loseStreak = 0;
+      let yesterdayProfit = 0, yesterdayInvested = 0, hasYesterdayData = false;
+
+      planRecords.forEach(record => {
+        totalInvested += record.bet_amount;
+        totalReturned += record.win_amount;
+        if (record.date === yesterdayStr) {
+          hasYesterdayData = true;
+          yesterdayInvested += record.bet_amount;
+          if (record.result) yesterdayProfit += record.profit;
+        }
+      });
+
+      for (let i = planRecords.length - 1; i >= 0; i--) {
+        if (planRecords[i].result === 'lose') loseStreak++;
+        else if (planRecords[i].result === 'win') break;
+      }
+
+      return {
+        ...plan,
+        totalInvested,
+        totalReturned,
+        totalProfit: totalReturned - totalInvested,
+        loseStreak,
+        yesterdayProfit,
+        yesterdayInvested,
+        hasYesterdayData
+      };
+    }).sort((a, b) => a.status === 'paused' ? 1 : b.status === 'paused' ? -1 : 0);
   },
 
   // 创建计划
   createPlan: async (data) => {
-    return apiRequest('/api/plans', {
-      method: 'POST',
-      body: JSON.stringify({ name: data.name })
-    });
+    const sb = getSupabase();
+    const user = await getCurrentUser();
+    const { data: plan, error } = await sb
+      .from('plans')
+      .insert({
+        name: data.name,
+        type: 'normal',
+        initial_amount: null,
+        status: 'active',
+        user_id: user.id
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { plan };
   },
 
   // 获取单个计划
   getPlan: async (id) => {
-    const result = await apiRequest(`/api/plans/${id}`);
-    return result.plan;
+    const sb = getSupabase();
+    const { data: plan, error: planError } = await sb
+      .from('plans')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (planError) throw planError;
+
+    const { data: records } = await sb
+      .from('records')
+      .select('*')
+      .eq('plan_id', id)
+      .order('date', { ascending: true });
+
+    return {
+      ...plan,
+      records: (records || []).map(r => ({
+        id: r.id,
+        date: r.date,
+        betAmount: r.bet_amount,
+        result: r.result,
+        winAmount: r.win_amount,
+        profit: r.profit,
+        multiplier: r.multiplier
+      }))
+    };
   },
 
   // 更新计划状态
   updatePlanStatus: async (id) => {
-    return apiRequest(`/api/plans/${id}/status`, {
-      method: 'PUT'
-    });
+    const sb = getSupabase();
+    const { data: plan } = await sb
+      .from('plans')
+      .select('status')
+      .eq('id', id)
+      .single();
+
+    const newStatus = plan.status === 'active' ? 'paused' : 'active';
+    const { error } = await sb
+      .from('plans')
+      .update({ status: newStatus })
+      .eq('id', id);
+
+    if (error) throw error;
+    return { status: newStatus };
   },
 
   // 添加投注记录
   addRecord: async (planId, data) => {
-    return apiRequest(`/api/plans/${planId}/records`, {
-      method: 'POST',
-      body: JSON.stringify({
+    const sb = getSupabase();
+    const user = await getCurrentUser();
+    const { data: record, error } = await sb
+      .from('records')
+      .insert({
+        plan_id: planId,
         date: data.date,
-        betAmount: data.betAmount
+        bet_amount: data.betAmount,
+        result: null,
+        win_amount: 0,
+        profit: 0,
+        multiplier: null,
+        user_id: user.id
       })
-    });
+      .select()
+      .single();
+
+    if (error) throw error;
+    return record;
   },
 
   // 更新投注结果
   updateRecord: async (planId, recordId, data) => {
-    return apiRequest(`/api/plans/${planId}/records/${recordId}`, {
-      method: 'PUT',
-      body: JSON.stringify(data)
-    });
+    const sb = getSupabase();
+    const updateData = {};
+
+    if (data.betAmount !== undefined) {
+      updateData.bet_amount = data.betAmount;
+    }
+
+    if (data.result !== undefined) {
+      updateData.result = data.result;
+      updateData.win_amount = data.result === 'win' ? data.winAmount : 0;
+    }
+
+    // 获取原始记录以计算利润
+    const { data: record } = await sb
+      .from('records')
+      .select('bet_amount')
+      .eq('id', recordId)
+      .single();
+
+    updateData.profit = (updateData.win_amount || 0) - (updateData.bet_amount || record.bet_amount);
+
+    const { error } = await sb
+      .from('records')
+      .update(updateData)
+      .eq('id', recordId);
+
+    if (error) throw error;
+    return updateData;
   },
 
   // 获取汇总数据
   getSummary: async () => {
-    const plans = await api.getPlans();
-    const records = await api.getHistory();
+    const sb = getSupabase();
 
-    let totalInvested = 0;
-    let totalReturned = 0;
+    // 并行查询
+    const [plansResult, recordsResult] = await Promise.all([
+      sb.from('plans').select('*').order('created_at', { ascending: false }),
+      sb.from('records').select('*').order('date', { ascending: false })
+    ]);
 
-    plans.forEach(plan => {
-      totalInvested += plan.totalInvested;
-      totalReturned += plan.totalReturned;
-    });
+    const plans = plansResult.data || [];
+    const records = recordsResult.data || [];
 
-    // 计算昨日汇总
-    let yesterdaySummary = null;
     const now = new Date();
     const yesterday = new Date(now);
     yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+    const yesterdayStr = formatDate(yesterday);
 
-    const yesterdayRecords = records.allRecords.filter(r => r.date === yesterdayStr);
+    let totalInvested = 0, totalReturned = 0;
+
+    const plansWithSummary = plans.map(plan => {
+      const planRecords = records.filter(r => r.plan_id === plan.id);
+      let pInvested = 0, pReturned = 0, loseStreak = 0;
+      let yesterdayProfit = 0, yesterdayInvested = 0, hasYesterdayData = false;
+
+      planRecords.forEach(record => {
+        pInvested += record.bet_amount;
+        pReturned += record.win_amount;
+        totalInvested += record.bet_amount;
+        totalReturned += record.win_amount;
+        if (record.date === yesterdayStr) {
+          hasYesterdayData = true;
+          yesterdayInvested += record.bet_amount;
+          if (record.result) yesterdayProfit += record.profit;
+        }
+      });
+
+      for (let i = planRecords.length - 1; i >= 0; i--) {
+        if (planRecords[i].result === 'lose') loseStreak++;
+        else if (planRecords[i].result === 'win') break;
+      }
+
+      return {
+        ...plan,
+        totalInvested: pInvested,
+        totalReturned: pReturned,
+        totalProfit: pReturned - pInvested,
+        loseStreak,
+        yesterdayProfit,
+        yesterdayInvested,
+        hasYesterdayData
+      };
+    }).sort((a, b) => a.status === 'paused' ? 1 : b.status === 'paused' ? -1 : 0);
+
+    let yesterdaySummary = null;
+    const yesterdayRecords = records.filter(r => r.date === yesterdayStr);
     if (yesterdayRecords.length > 0) {
       let invested = 0, returned = 0, profit = 0;
       yesterdayRecords.forEach(r => {
-        invested += r.betAmount;
-        returned += r.winAmount;
+        invested += r.bet_amount;
+        returned += r.win_amount;
         profit += r.profit;
       });
       yesterdaySummary = { date: yesterdayStr, invested, returned, profit };
     }
 
     return {
+      plans: plansWithSummary,
       totalInvested,
       totalReturned,
       totalProfit: totalReturned - totalInvested,
@@ -257,6 +389,59 @@ const api = {
 
   // 获取历史数据
   getHistory: async () => {
-    return apiRequest('/api/history');
+    const sb = getSupabase();
+
+    const { data: records, error } = await sb
+      .from('records')
+      .select('*')
+      .order('date', { ascending: false });
+
+    if (error) throw error;
+
+    // 查询计划列表关联名称
+    const { data: plans } = await sb
+      .from('plans')
+      .select('*');
+
+    const planMap = {};
+    (plans || []).forEach(p => { planMap[p.id] = p; });
+
+    // 按日期分组计算每日收益
+    const dailyProfits = {};
+    (records || []).forEach(record => {
+      if (!record.result) return;
+      if (!dailyProfits[record.date]) dailyProfits[record.date] = 0;
+      dailyProfits[record.date] += record.profit;
+    });
+
+    const history = Object.entries(dailyProfits)
+      .map(([date, profit]) => ({ date, profit }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    let cumulative = 0;
+    const cumulativeHistory = history.map(item => {
+      cumulative += item.profit;
+      return { ...item, cumulative };
+    });
+
+    return {
+      dailyProfits: cumulativeHistory,
+      allRecords: (records || []).map(r => ({
+        planName: planMap[r.plan_id]?.name || '未知计划',
+        planType: planMap[r.plan_id]?.type,
+        id: r.id,
+        date: r.date,
+        betAmount: r.bet_amount,
+        result: r.result,
+        winAmount: r.win_amount,
+        profit: r.profit,
+        multiplier: r.multiplier
+      }))
+    };
   }
 };
+
+// 辅助函数
+function formatDate(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}

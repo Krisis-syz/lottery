@@ -11,21 +11,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 检查登录状态
   if (!(await requireAuth())) return;
 
-  loadSummary();
-  loadPlans();
+  loadHomeData();
 });
 
-// 加载汇总数据
-async function loadSummary() {
+// 一次请求加载所有数据
+async function loadHomeData() {
   try {
     const summary = await api.getSummary();
+    const plans = summary.plans || [];
 
-    // 总利润 - 大号数字
+    // 渲染汇总
     const profitEl = document.getElementById('totalProfit');
     profitEl.textContent = formatNumber(summary.totalProfit, true);
     profitEl.className = 'summary-big-value ' + (summary.totalProfit >= 0 ? 'positive' : 'negative');
 
-    // 底部三列
     const lastDayProfitEl = document.getElementById('lastDayProfit');
     const lastDayInvestedEl = document.getElementById('lastDayInvested');
     const totalInvestedEl = document.getElementById('totalInvested');
@@ -40,18 +39,9 @@ async function loadSummary() {
       lastDayInvestedEl.textContent = '-';
     }
     totalInvestedEl.textContent = formatNumber(summary.totalInvested);
-  } catch (error) {
-    console.error('加载汇总失败:', error);
-  }
-}
 
-// 加载计划列表（仅进行中）
-async function loadPlans() {
-  try {
-    const plans = await api.getPlans();
+    // 渲染计划列表（仅进行中）
     const grid = document.getElementById('plansGrid');
-
-    // 只显示进行中的计划
     const activePlans = plans.filter(p => p.status === 'active');
 
     if (activePlans.length === 0) {
@@ -120,8 +110,7 @@ document.getElementById('createForm').addEventListener('submit', async (e) => {
   try {
     await api.createPlan({ name });
     hideCreateModal();
-    loadPlans();
-    loadSummary();
+    loadHomeData();
   } catch (error) {
     alert(error.message);
   }
