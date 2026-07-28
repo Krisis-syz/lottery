@@ -160,6 +160,7 @@ function updateOverviewVisibility() {
   const tableTitle = document.getElementById('tableTitle');
   const tableHead = document.getElementById('tableHead');
   const trendToggle = document.getElementById('trendToggle');
+  const trendCard = document.querySelector('#tabOverview .chart-card:first-child');
 
   if (overviewMode === 'type') {
     if (pieCard) pieCard.style.display = 'none';
@@ -168,11 +169,13 @@ function updateOverviewVisibility() {
     if (tableTitle) tableTitle.textContent = '月度明细';
     if (tableHead) tableHead.innerHTML = '<tr><th>月份</th><th>金额</th><th>占比</th><th>总额</th></tr>';
     if (trendToggle) trendToggle.style.display = 'flex';
+    if (trendCard) trendCard.style.display = 'block';
   } else if (overviewMode === 'month') {
     if (pieCard) pieCard.style.display = 'block';
-    if (prevPieCard) prevPieCard.style.display = 'block';
+    if (prevPieCard) prevPieCard.style.display = 'none';
     if (tableCard) tableCard.style.display = 'none';
     if (trendToggle) trendToggle.style.display = 'none';
+    if (trendCard) trendCard.style.display = 'none';
   } else {
     if (pieCard) pieCard.style.display = 'block';
     if (prevPieCard) prevPieCard.style.display = 'none';
@@ -180,6 +183,7 @@ function updateOverviewVisibility() {
     if (tableTitle) tableTitle.textContent = '月度明细';
     if (tableHead) tableHead.innerHTML = '<tr><th>月份</th><th>总额</th><th>收支</th><th>环比</th><th>同比</th></tr>';
     if (trendToggle) trendToggle.style.display = 'none';
+    if (trendCard) trendCard.style.display = 'block';
   }
 }
 
@@ -410,15 +414,8 @@ function renderPieChart() {
 
 function renderMonthPieCharts() {
   const selMonth = document.getElementById('filterSelect')?.value || currentMonth;
-  const prevMonth = getPrevMonth(selMonth);
-
   document.getElementById('pieTitle').textContent = selMonth.replace('-', '年') + '月 资金占比';
-  document.getElementById('prevPieTitle').textContent = prevMonth.replace('-', '年') + '月 资金占比';
-
-  // 本月饼图
   renderSinglePie('pieChart', 'pieLegend', selMonth);
-  // 上月饼图
-  renderSinglePie('prevPieChart', 'prevPieLegend', prevMonth);
 }
 
 function renderSinglePie(canvasId, legendId, month) {
