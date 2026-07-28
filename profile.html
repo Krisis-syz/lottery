@@ -32,12 +32,6 @@
 
     <!-- 操作菜单 -->
     <section class="profile-menu">
-      <a href="funds.html" class="menu-item" style="text-decoration: none;">
-        <span class="menu-icon">💰</span>
-        <span class="menu-text">资金管理</span>
-        <span class="menu-badge" id="fundBadge" style="display:none;width:8px;height:8px;border-radius:50%;background:#ef4444;margin-right:4px;flex-shrink:0;"></span>
-        <span class="menu-arrow">›</span>
-      </a>
       <a href="calculator.html" class="menu-item" style="text-decoration: none;">
         <span class="menu-icon">🧮</span>
         <span class="menu-text">跟单计算器</span>
@@ -260,21 +254,7 @@
 
       // 显示当前主题状态
       updateThemeStatus();
-
-      // 检查资金记录未读
-      checkFundBadge();
     });
-
-    async function checkFundBadge() {
-      try {
-        const now = new Date();
-        const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-        const recorded = await fundApi.checkMonthRecorded(ym);
-        document.getElementById('fundBadge').style.display = recorded ? 'none' : 'inline-block';
-      } catch (e) {
-        // 静默失败
-      }
-    }
 
     function updateThemeStatus() {
       const theme = document.documentElement.getAttribute('data-theme') || 'dark';
