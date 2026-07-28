@@ -221,6 +221,33 @@ function toggleTrendDataset(idx) {
     trendChart.data.datasets[1].hidden = idx !== 1;
     trendChart.options.scales.y.ticks.display = idx === 0;
     trendChart.options.scales.y1.ticks.display = idx === 1;
+    // 重新应用渐变
+    const { ctx: c, chartArea } = trendChart;
+    if (chartArea) {
+      const g0 = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+      g0.addColorStop(0, 'rgba(245, 158, 11, 0.7)');
+      g0.addColorStop(0.14, 'rgba(245, 158, 11, 0.6)');
+      g0.addColorStop(0.29, 'rgba(245, 158, 11, 0.5)');
+      g0.addColorStop(0.43, 'rgba(245, 158, 11, 0.4)');
+      g0.addColorStop(0.57, 'rgba(245, 158, 11, 0.3)');
+      g0.addColorStop(0.71, 'rgba(245, 158, 11, 0.2)');
+      g0.addColorStop(0.86, 'rgba(245, 158, 11, 0.1)');
+      g0.addColorStop(1, 'rgba(245, 158, 11, 0.0)');
+      g0.addColorStop(1, 'rgba(245, 158, 11, 0.0)');
+      trendChart.data.datasets[0].backgroundColor = g0;
+
+      const g1 = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+      g1.addColorStop(0, 'rgba(96, 165, 250, 0.7)');
+      g1.addColorStop(0.14, 'rgba(96, 165, 250, 0.6)');
+      g1.addColorStop(0.29, 'rgba(96, 165, 250, 0.5)');
+      g1.addColorStop(0.43, 'rgba(96, 165, 250, 0.4)');
+      g1.addColorStop(0.57, 'rgba(96, 165, 250, 0.3)');
+      g1.addColorStop(0.71, 'rgba(96, 165, 250, 0.2)');
+      g1.addColorStop(0.86, 'rgba(96, 165, 250, 0.1)');
+      g1.addColorStop(1, 'rgba(96, 165, 250, 0.0)');
+      g1.addColorStop(1, 'rgba(96, 165, 250, 0.0)');
+      trendChart.data.datasets[1].backgroundColor = g1;
+    }
     trendChart.update();
   }
 }
@@ -312,10 +339,6 @@ function renderTrendChart() {
   data = filterByRange(data);
 
   const canvas = ctx.getContext('2d');
-  const gradient = canvas.createLinearGradient(0, 0, 0, 250);
-  gradient.addColorStop(0, 'rgba(245, 158, 11, 0.25)');
-  gradient.addColorStop(0.6, 'rgba(245, 158, 11, 0.08)');
-  gradient.addColorStop(1, 'rgba(245, 158, 11, 0.0)');
 
   trendChart = new Chart(canvas, {
     type: 'line',
@@ -323,9 +346,9 @@ function renderTrendChart() {
       labels: data.map(d => d.month),
       datasets: [{
         data: data.map(d => d.value),
-        borderColor: '#fbbf24',
-        backgroundColor: gradient,
-        pointBackgroundColor: '#fbbf24',
+        borderColor: '#f59e0b',
+        backgroundColor: 'rgba(245, 158, 11, 0.15)',
+        pointBackgroundColor: '#f59e0b',
         fill: true, tension: 0.4, pointRadius: 2.5, pointHoverRadius: 5, borderWidth: 2.5
       }]
     },
@@ -333,11 +356,30 @@ function renderTrendChart() {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
-        x: { grid: { color: 'rgba(128,128,128,0.1)' }, ticks: { maxTicksLimit: 6, color: '#6b7280', font: { size: 10 } } },
+        x: { grid: { display: false }, ticks: { maxTicksLimit: 6, color: '#6b7280', font: { size: 10 } } },
         y: { border: { display: false }, grid: { color: 'rgba(128,128,128,0.1)', drawTicks: false }, ticks: { color: '#6b7280', font: { size: 10 }, callback: v => '¥' + (v >= 1000 ? (v/1000).toFixed(1) + 'k' : v) } }
       }
-    }
+    },
+    plugins: [{
+      id: 'gradientFill',
+      afterLayout(chart) {
+        const { ctx: c, chartArea } = chart;
+        if (!chartArea) return;
+        const gradient = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+        gradient.addColorStop(0, 'rgba(245, 158, 11, 0.7)');
+        gradient.addColorStop(0.14, 'rgba(245, 158, 11, 0.6)');
+        gradient.addColorStop(0.29, 'rgba(245, 158, 11, 0.5)');
+        gradient.addColorStop(0.43, 'rgba(245, 158, 11, 0.4)');
+        gradient.addColorStop(0.57, 'rgba(245, 158, 11, 0.3)');
+        gradient.addColorStop(0.71, 'rgba(245, 158, 11, 0.2)');
+        gradient.addColorStop(0.86, 'rgba(245, 158, 11, 0.1)');
+        gradient.addColorStop(1, 'rgba(245, 158, 11, 0.0)');
+        gradient.addColorStop(1, 'rgba(245, 158, 11, 0.0)');
+        chart.data.datasets[0].backgroundColor = gradient;
+      }
+    }]
   });
+  trendChart.update();
 }
 
 function renderTypeTrendChart(ctx) {
@@ -359,15 +401,6 @@ function renderTypeTrendChart(ctx) {
   }));
 
   const canvas = ctx.getContext('2d');
-  const gradientGold = canvas.createLinearGradient(0, 0, 0, 250);
-  gradientGold.addColorStop(0, 'rgba(251, 191, 36, 0.3)');
-  gradientGold.addColorStop(0.6, 'rgba(251, 191, 36, 0.08)');
-  gradientGold.addColorStop(1, 'rgba(251, 191, 36, 0.0)');
-
-  const gradientBlue = canvas.createLinearGradient(0, 0, 0, 250);
-  gradientBlue.addColorStop(0, 'rgba(96, 165, 250, 0.25)');
-  gradientBlue.addColorStop(0.6, 'rgba(96, 165, 250, 0.06)');
-  gradientBlue.addColorStop(1, 'rgba(96, 165, 250, 0.0)');
 
   trendChart = new Chart(canvas, {
     type: 'line',
@@ -377,9 +410,9 @@ function renderTypeTrendChart(ctx) {
         {
           label: '金额',
           data: data.map(d => d.value),
-          borderColor: '#fbbf24',
-          backgroundColor: gradientGold,
-          pointBackgroundColor: '#fbbf24',
+          borderColor: '#f59e0b',
+          backgroundColor: 'rgba(245, 158, 11, 0.15)',
+          pointBackgroundColor: '#f59e0b',
           fill: true, tension: 0.4, pointRadius: 2.5, borderWidth: 2.5,
           yAxisID: 'y',
           hidden: trendActiveDataset !== 0
@@ -388,7 +421,7 @@ function renderTypeTrendChart(ctx) {
           label: '占比',
           data: data.map(d => d.pct),
           borderColor: '#60a5fa',
-          backgroundColor: gradientBlue,
+          backgroundColor: 'rgba(96, 165, 250, 0.12)',
           pointBackgroundColor: '#60a5fa',
           fill: true, tension: 0.4, pointRadius: 2.5, borderWidth: 2.5,
           yAxisID: 'y1',
@@ -400,11 +433,41 @@ function renderTypeTrendChart(ctx) {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
-        x: { grid: { color: 'rgba(128,128,128,0.1)' }, ticks: { maxTicksLimit: 6, color: '#6b7280', font: { size: 10 } } },
+        x: { grid: { display: false }, ticks: { maxTicksLimit: 6, color: '#6b7280', font: { size: 10 } } },
         y: { type: 'linear', position: 'left', border: { display: false }, grid: { color: 'rgba(128,128,128,0.1)', drawTicks: false }, ticks: { display: trendActiveDataset === 0, color: '#6b7280', font: { size: 10 }, callback: v => '¥' + (v >= 1000 ? (v/1000).toFixed(1) + 'k' : v) } },
         y1: { type: 'linear', position: 'left', border: { display: false }, grid: { drawOnChartArea: false, drawTicks: false }, ticks: { display: trendActiveDataset === 1, color: '#6b7280', font: { size: 10 }, callback: v => v.toFixed(0) + '%' }, min: 0, max: 100 }
       }
-    }
+    },
+    plugins: [{
+      id: 'typeGradientFill',
+      afterLayout(chart) {
+        const { ctx: c, chartArea } = chart;
+        if (!chartArea) return;
+        const gradientGold = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+        gradientGold.addColorStop(0, 'rgba(245, 158, 11, 0.7)');
+        gradientGold.addColorStop(0.14, 'rgba(245, 158, 11, 0.6)');
+        gradientGold.addColorStop(0.29, 'rgba(245, 158, 11, 0.5)');
+        gradientGold.addColorStop(0.43, 'rgba(245, 158, 11, 0.4)');
+        gradientGold.addColorStop(0.57, 'rgba(245, 158, 11, 0.3)');
+        gradientGold.addColorStop(0.71, 'rgba(245, 158, 11, 0.2)');
+        gradientGold.addColorStop(0.86, 'rgba(245, 158, 11, 0.1)');
+        gradientGold.addColorStop(1, 'rgba(245, 158, 11, 0.0)');
+        gradientGold.addColorStop(1, 'rgba(245, 158, 11, 0.0)');
+        chart.data.datasets[0].backgroundColor = gradientGold;
+
+        const gradientBlue = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+        gradientBlue.addColorStop(0, 'rgba(96, 165, 250, 0.7)');
+        gradientBlue.addColorStop(0.14, 'rgba(96, 165, 250, 0.6)');
+        gradientBlue.addColorStop(0.29, 'rgba(96, 165, 250, 0.5)');
+        gradientBlue.addColorStop(0.43, 'rgba(96, 165, 250, 0.4)');
+        gradientBlue.addColorStop(0.57, 'rgba(96, 165, 250, 0.3)');
+        gradientBlue.addColorStop(0.71, 'rgba(96, 165, 250, 0.2)');
+        gradientBlue.addColorStop(0.86, 'rgba(96, 165, 250, 0.1)');
+        gradientBlue.addColorStop(1, 'rgba(96, 165, 250, 0.0)');
+        gradientBlue.addColorStop(1, 'rgba(96, 165, 250, 0.0)');
+        chart.data.datasets[1].backgroundColor = gradientBlue;
+      }
+    }]
   });
   trendChart.update();
 }
