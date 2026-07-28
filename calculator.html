@@ -437,18 +437,13 @@
 
   <script src="js/api.js"></script>
   <script>
-    alert('脚本已加载');
     let selectedPlan = null;
     let consecutiveLosses = [];
     let totalLossAmount = 0;
 
     document.addEventListener('DOMContentLoaded', async () => {
-      alert('页面加载完成');
       await waitForSupabase();
-      alert('Supabase 已加载');
-      const authResult = await requireAuth();
-      alert('认证结果: ' + authResult);
-      if (!authResult) return;
+      if (!(await requireAuth())) return;
       loadPlans();
     });
 
@@ -662,7 +657,7 @@
 
     // 向上取整到偶数
     function roundUpToEven(num) {
-      const.ceil = Math.ceil(num);
+      const ceil = Math.ceil(num);
       return ceil % 2 === 0 ? ceil : ceil + 1;
     }
   </script>
