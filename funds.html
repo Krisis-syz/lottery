@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>资金管理</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="icon.png" type="image/png">
+  <link rel="apple-touch-icon" href="icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="投资计划">
+  <meta name="theme-color" content="#0a0e17">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="js/supabase.min.js"></script>
+  <style>
+    .fund-summary {
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 24px 20px;
+      margin-bottom: 16px;
+      backdrop-filter: blur(20px);
+    }
+
+    .fund-total {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--gold);
+      margin-bottom: 4px;
+    }
+
+    .fund-change {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.875rem;
+      margin-bottom: 16px;
+    }
+
+    .fund-change.positive { color: var(--success); }
+    .fund-change.negative { color: var(--danger); }
+
+    .fund-sources-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .fund-source-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      font-size: 0.8rem;
+    }
+
+    .fund-source-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .fund-source-chip .amount {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-primary);
+    }
+
+    .fund-source-chip .name {
+      color: var(--text-secondary);
+    }
+
+    /* Tab buttons */
+    .chart-tabs {
+      display: flex;
+      gap: 4px;
+    }
+
+    .chart-tab {
+      padding: 4px 12px;
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .chart-tab.active {
+      background: var(--gold);
+      color: #000;
+      border-color: var(--gold);
+    }
+
+    /* Record form */
+    .record-form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .record-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .record-label {
+      width: 70px;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      flex-shrink: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .record-input {
+      flex: 1;
+      padding: 10px 12px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.95rem;
+    }
+
+    .record-input:focus {
+      outline: none;
+      border-color: var(--gold);
+    }
+
+    .record-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    /* Source management */
+    .source-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+    }
+
+    .source-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .source-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .source-name {
+      font-size: 0.9rem;
+    }
+
+    .source-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .source-btn {
+      padding: 4px 10px;
+      border: 1px solid var(--glass-border);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .source-btn:hover {
+      border-color: var(--text-secondary);
+      color: var(--text-primary);
+    }
+
+    .source-btn.danger:hover {
+      border-color: #ef4444;
+      color: #ef4444;
+    }
+
+    .add-source-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .add-source-input {
+      flex: 1;
+      padding: 10px 12px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-size: 0.9rem;
+    }
+
+    .add-source-input:focus {
+      outline: none;
+      border-color: var(--gold);
+    }
+
+    .add-source-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    /* Detail table */
+    .detail-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .detail-table th {
+      text-align: left;
+      padding: 8px 12px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .detail-table td {
+      padding: 10px 12px;
+      font-size: 0.875rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .detail-table .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Report */
+    .report-content {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      font-size: 0.875rem;
+      line-height: 1.7;
+      color: var(--text-secondary);
+      white-space: pre-wrap;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .report-loading {
+      text-align: center;
+      padding: 30px 20px;
+      color: var(--text-secondary);
+    }
+
+    .report-loading .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--glass-border);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 12px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .report-select {
+      padding: 8px 12px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-size: 0.85rem;
+      margin-bottom: 12px;
+    }
+
+    .report-select:focus {
+      outline: none;
+      border-color: var(--gold);
+    }
+
+    /* Pie chart */
+    .pie-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .pie-canvas-wrap {
+      width: 160px;
+      height: 160px;
+      flex-shrink: 0;
+    }
+
+    .pie-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .pie-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+    }
+
+    .pie-legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .pie-legend-label {
+      color: var(--text-secondary);
+    }
+
+    .pie-legend-value {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-primary);
+      margin-left: auto;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-secondary);
+    }
+
+    /* Buttons */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 20px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      color: #000;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: var(--transition);
+      width: 100%;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px var(--gold-glow);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .btn-sm {
+      padding: 6px 14px;
+      border: 1px solid var(--glass-border);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .btn-sm:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+
+    .section-card {
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 16px;
+      backdrop-filter: blur(20px);
+    }
+
+    .section-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .section-card-title {
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .chart-wrapper {
+      position: relative;
+      height: 220px;
+    }
+
+    @media (max-width: 768px) {
+      .chart-wrapper { height: 180px; }
+      .pie-wrapper { flex-direction: column; }
+      .pie-canvas-wrap { width: 140px; height: 140px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="profile.html" class="back-btn" style="display:inline-flex;align-items:center;gap:6px;color:var(--text-secondary);font-size:0.875rem;text-decoration:none;margin-bottom:20px;transition:var(--transition);">← 返回</a>
+
+    <!-- 总资产卡片 -->
+    <section class="fund-summary" id="summaryCard">
+      <div class="fund-total" id="totalAmount">--</div>
+      <div class="fund-change" id="monthChange">加载中...</div>
+      <div class="fund-sources-row" id="sourcesChips"></div>
+    </section>
+
+    <!-- 趋势图 -->
+    <section class="section-card">
+      <div class="section-card-header">
+        <span class="section-card-title">资金趋势</span>
+        <div class="chart-tabs">
+          <button class="chart-tab active" onclick="switchTrendView('year')">近一年</button>
+          <button class="chart-tab" onclick="switchTrendView('all')">全部</button>
+        </div>
+      </div>
+      <div class="chart-wrapper">
+        <canvas id="trendChart"></canvas>
+      </div>
+    </section>
+
+    <!-- 资金占比饼图 -->
+    <section class="section-card">
+      <div class="section-card-header">
+        <span class="section-card-title">资金占比</span>
+        <select class="report-select" id="pieMonthSelect" onchange="updatePieChart()" style="margin-bottom:0;width:auto;">
+        </select>
+      </div>
+      <div class="pie-wrapper">
+        <div class="pie-canvas-wrap">
+          <canvas id="pieChart"></canvas>
+        </div>
+        <div class="pie-legend" id="pieLegend"></div>
+      </div>
+    </section>
+
+    <!-- 详细记录 -->
+    <section class="section-card">
+      <div class="section-card-header">
+        <span class="section-card-title">详细记录</span>
+        <div class="chart-tabs">
+          <button class="chart-tab active" onclick="switchRecordView('year')">近一年</button>
+          <button class="chart-tab" onclick="switchRecordView('all')">全部</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="detail-table">
+          <thead>
+            <tr>
+              <th>月份</th>
+              <th>总额</th>
+              <th>收支</th>
+              <th>环比</th>
+              <th>同比</th>
+            </tr>
+          </thead>
+          <tbody id="detailTableBody"></tbody>
+        </table>
+      </div>
+      <div class="empty-state" id="emptyDetail" style="display:none;padding:20px;">
+        <p>暂无记录</p>
+      </div>
+    </section>
+
+    <!-- 资金来源管理 -->
+    <section class="section-card">
+      <div class="section-card-header">
+        <span class="section-card-title">资金来源</span>
+      </div>
+      <div id="sourceList"></div>
+      <div class="add-source-row">
+        <input type="text" class="add-source-input" id="newSourceName" placeholder="新增资金名称...">
+        <button class="btn-sm" onclick="addNewSource()">添加</button>
+      </div>
+    </section>
+
+    <!-- 本月记录 -->
+    <section class="section-card">
+      <div class="section-card-header">
+        <span class="section-card-title" id="recordTitle">本月记录</span>
+      </div>
+      <div class="record-form" id="recordForm">
+        <div class="empty-state" style="padding:20px;">
+          <p>请先添加资金来源</p>
+        </div>
+      </div>
+      <button class="btn-primary" id="saveBtn" onclick="saveMonthlyRecords()" style="margin-top:12px;display:none;">
+        保存本月记录
+      </button>
+    </section>
+
+    <!-- AI 月度报告 -->
+    <section class="section-card">
+      <div class="section-card-header">
+        <span class="section-card-title">月度报告</span>
+        <select class="report-select" id="reportMonthSelect" onchange="loadReport()" style="margin-bottom:0;width:auto;">
+        </select>
+      </div>
+      <div id="reportContainer">
+        <button class="btn-primary" id="generateBtn" onclick="generateReport()">
+          一键生成报告
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/funds.js"></script>
+</body>
+</html>

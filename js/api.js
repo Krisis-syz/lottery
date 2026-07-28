@@ -441,6 +441,146 @@ const api = {
   }
 };
 
+// ============ 资金管理 API ============
+
+const fundApi = {
+  // 获取资金来源
+  getSources: async () => {
+    const sb = getSupabase();
+    const user = await getCurrentUser();
+    const { data, error } = await sb
+      .from('fund_sources')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  },
+
+  // 新增资金来源
+  addSource: async (name) => {
+    const sb = getSupabase();
+    const user = await getCurrentUser();
+    const { data, error } = await sb
+      .from('fund_sources')
+      .insert({ name, user_id: user.id })
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  // 删除资金来源
+  deleteSource: async (id) => {
+    const sb = getSupabase();
+    const { error } = await sb.from('fund_sources').delete().eq('id', id);
+    if (error) throw error;
+  },
+
+  // 获取某月记录
+  getRecords: async (yearMonth) => {
+    const sb = getSupabase();
+    const user = await getCurrentUser();
+    const { data, error } = await sb
+      .from('fund_records')
+      .select('*, fund_sources(name)')
+      .eq('user_id', user.id)
+      .eq('year_month', yearMonth);
+    if (error) throw error;
+    return (data || []).map(r => ({
+      id: r.id,
+      sourceId: r.source_id,
+      sourceName: r.fund_sources?.name || '未知',
+      amount: r.amount
+    }));
+  },
+
+  // 批量保存月度记录（upsert）
+  saveRecords: async (yearMonth, records) => {
+    const sb = getSupabase();
+    const user = await getCurrentUser();
+    const rows = records.map(r => ({
+      user_id: user.id,
+      source_id: r.sourceId,
+      year_month: yearMonth,
+      amount: r.amount
+    }));
+    const { error } = await sb
+      .from('fund_records')
+      .upsert(rows, { onConflict: 'user_id,source_id,year_month' });
+    if (error) throw error;
+  },
+
+  // 获取所有历史记录（用于趋势图）
+  getAllRecords: async () => {
+    const sb = getSupabase();
+    const user = await getCurrentUser();
+    const { data, error } = await sb
+      .from('fund_records')
+      .select('year_month, amount, source_id, fund_sources(name)')
+      .eq('user_id', user.id)
+      .order('year_month', { ascending: true });
+    if (error) throw error;
+    return (data || []).map(r => ({
+      yearMonth: r.year_month,
+      amount: r.amount,
+      sourceId: r.source_id,
+      sourceName: r.fund_sources?.name || '未知'
+    }));
+  },
+
+  // 检查某月是否已记录
+  checkMonthRecorded: async (yearMonth) => {
+    const sb = getSupabase();
+    const user = await getCurrentUser();
+    const { count, error } = await sb
+      .from('fund_records')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('year_month', yearMonth);
+    if (error) throw error;
+    return count > 0;
+  },
+
+  // 获取报告
+  getReport: async (yearMonth) => {
+    const sb = getSupabase();
+    const user = await getCurrentUser();
+    const { data, error } = await sb
+      .from('fund_reports')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('year_month', yearMonth)
+      .single();
+    if (error && error.code !== 'PGRST116') throw error;
+    return data;
+  },
+
+  // 获取所有报告列表
+  getReports: async () => {
+    const sb = getSupabase();
+    const user = await getCurrentUser();
+    const { data, error } = await sb
+      .from('fund_reports')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('year_month', { ascending: false });
+    if (error) throw error;
+    return data || [];
+  },
+
+  // 生成 AI 报告（调用 Edge Function）
+  generateReport: async (yearMonth) => {
+    const sb = getSupabase();
+    const user = await getCurrentUser();
+    const { data, error } = await sb.functions.invoke('generate-fund-report', {
+      body: { user_id: user.id, year_month: yearMonth }
+    });
+    if (error) throw error;
+    return data;
+  }
+};
+
 // 辅助函数
 function formatDate(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
