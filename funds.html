@@ -664,12 +664,21 @@
         <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
       </div>
 
-      <!-- 饼图 -->
+      <!-- 饼图 - 本月 -->
       <div class="chart-card" id="pieCard">
         <div class="chart-card-title" id="pieTitle">资金占比</div>
         <div class="pie-row">
           <div class="pie-box"><canvas id="pieChart"></canvas></div>
           <div class="legend-list" id="pieLegend"></div>
+        </div>
+      </div>
+
+      <!-- 饼图 - 上月（仅按月份显示） -->
+      <div class="chart-card" id="prevPieCard" style="display:none;">
+        <div class="chart-card-title" id="prevPieTitle">上月资金占比</div>
+        <div class="pie-row">
+          <div class="pie-box"><canvas id="prevPieChart"></canvas></div>
+          <div class="legend-list" id="prevPieLegend"></div>
         </div>
       </div>
 

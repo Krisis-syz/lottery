@@ -5,6 +5,7 @@ let allReports = [];
 let currentMonth = getCurrentYearMonth();
 let trendChart = null;
 let pieChart = null;
+let prevPieChart = null;
 let overviewMode = 'total';
 let activeReportMonth = null;
 let tableShowCount = 12;
@@ -154,6 +155,7 @@ function renderOverviewTab() {
 
 function updateOverviewVisibility() {
   const pieCard = document.getElementById('pieCard');
+  const prevPieCard = document.getElementById('prevPieCard');
   const tableCard = document.getElementById('tableCard');
   const tableTitle = document.getElementById('tableTitle');
   const tableHead = document.getElementById('tableHead');
@@ -161,16 +163,19 @@ function updateOverviewVisibility() {
 
   if (overviewMode === 'type') {
     if (pieCard) pieCard.style.display = 'none';
+    if (prevPieCard) prevPieCard.style.display = 'none';
     if (tableCard) tableCard.style.display = 'block';
     if (tableTitle) tableTitle.textContent = '月度明细';
     if (tableHead) tableHead.innerHTML = '<tr><th>月份</th><th>金额</th><th>占比</th><th>总额</th></tr>';
     if (trendToggle) trendToggle.style.display = 'flex';
   } else if (overviewMode === 'month') {
     if (pieCard) pieCard.style.display = 'block';
+    if (prevPieCard) prevPieCard.style.display = 'block';
     if (tableCard) tableCard.style.display = 'none';
     if (trendToggle) trendToggle.style.display = 'none';
   } else {
     if (pieCard) pieCard.style.display = 'block';
+    if (prevPieCard) prevPieCard.style.display = 'none';
     if (tableCard) tableCard.style.display = 'block';
     if (tableTitle) tableTitle.textContent = '月度明细';
     if (tableHead) tableHead.innerHTML = '<tr><th>月份</th><th>总额</th><th>收支</th><th>环比</th><th>同比</th></tr>';
@@ -364,21 +369,17 @@ function renderTypeTrendChart(ctx) {
 
 // ============ 饼图 ============
 function renderPieChart() {
+  if (overviewMode === 'month') {
+    renderMonthPieCharts();
+    return;
+  }
+
   const ctx = document.getElementById('pieChart');
   if (!ctx) return;
   if (pieChart) pieChart.destroy();
 
   let month = currentMonth;
-  let title = '资金占比';
-
-  if (overviewMode === 'month') {
-    const selMonth = document.getElementById('filterSelect')?.value || currentMonth;
-    month = getPrevMonth(selMonth);
-    title = '上月资金占比';
-    document.getElementById('pieTitle').textContent = title;
-  } else {
-    document.getElementById('pieTitle').textContent = '资金占比';
-  }
+  document.getElementById('pieTitle').textContent = '资金占比';
 
   const items = allSources.map((s, i) => ({
     name: s.name,
@@ -402,6 +403,56 @@ function renderPieChart() {
 
   const total = items.reduce((s, i) => s + i.amount, 0);
   document.getElementById('pieLegend').innerHTML = items.map(s => {
+    const pct = total > 0 ? ((s.amount / total) * 100).toFixed(1) : '0';
+    return `<div class="legend-item"><span class="legend-dot" style="background:${s.color}"></span><span class="legend-name">${s.name}</span><span class="legend-val">¥${fmtNum(s.amount)} (${pct}%)</span></div>`;
+  }).join('');
+}
+
+function renderMonthPieCharts() {
+  const selMonth = document.getElementById('filterSelect')?.value || currentMonth;
+  const prevMonth = getPrevMonth(selMonth);
+
+  document.getElementById('pieTitle').textContent = selMonth.replace('-', '年') + '月 资金占比';
+  document.getElementById('prevPieTitle').textContent = prevMonth.replace('-', '年') + '月 资金占比';
+
+  // 本月饼图
+  renderSinglePie('pieChart', 'pieLegend', selMonth);
+  // 上月饼图
+  renderSinglePie('prevPieChart', 'prevPieLegend', prevMonth);
+}
+
+function renderSinglePie(canvasId, legendId, month) {
+  const ctx = document.getElementById(canvasId);
+  if (!ctx) return;
+  if (canvasId === 'pieChart' && pieChart) pieChart.destroy();
+  if (canvasId === 'prevPieChart' && prevPieChart) prevPieChart.destroy();
+
+  const items = allSources.map((s, i) => ({
+    name: s.name,
+    amount: getAmountForMonth(s.id, month),
+    color: COLORS[i % COLORS.length]
+  })).filter(s => s.amount > 0);
+
+  const legendEl = document.getElementById(legendId);
+  if (items.length === 0) {
+    legendEl.innerHTML = '<div style="color:var(--text-muted);font-size:0.85rem;">暂无数据</div>';
+    return;
+  }
+
+  const chart = new Chart(ctx.getContext('2d'), {
+    type: 'doughnut',
+    data: {
+      labels: items.map(s => s.name),
+      datasets: [{ data: items.map(s => s.amount), backgroundColor: items.map(s => s.color), borderWidth: 0, hoverOffset: 4 }]
+    },
+    options: { responsive: true, maintainAspectRatio: true, cutout: '62%', plugins: { legend: { display: false } } }
+  });
+
+  if (canvasId === 'pieChart') pieChart = chart;
+  else prevPieChart = chart;
+
+  const total = items.reduce((s, i) => s + i.amount, 0);
+  legendEl.innerHTML = items.map(s => {
     const pct = total > 0 ? ((s.amount / total) * 100).toFixed(1) : '0';
     return `<div class="legend-item"><span class="legend-dot" style="background:${s.color}"></span><span class="legend-name">${s.name}</span><span class="legend-val">¥${fmtNum(s.amount)} (${pct}%)</span></div>`;
   }).join('');
