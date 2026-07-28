@@ -1,5 +1,5 @@
 // API 配置
-const API_BASE_URL = 'https://lottery-api.你的用户名.workers.dev'; // Workers API 地址
+const API_BASE_URL = 'https://lottery-api.louissyz.workers.dev';
 
 // Supabase 配置（用于登录）
 const SUPABASE_URL = 'https://wcstsltmdcmenxkepyzk.supabase.co';
