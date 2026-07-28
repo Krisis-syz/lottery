@@ -167,7 +167,7 @@ function updateOverviewVisibility() {
     if (prevPieCard) prevPieCard.style.display = 'none';
     if (tableCard) tableCard.style.display = 'block';
     if (tableTitle) tableTitle.textContent = '月度明细';
-    if (tableHead) tableHead.innerHTML = '<tr><th>月份</th><th>金额</th><th>占比</th><th>同比</th></tr>';
+    if (tableHead) tableHead.innerHTML = '<tr><th>月份</th><th>金额</th><th>占比</th><th>环比</th></tr>';
     if (trendToggle) trendToggle.style.display = 'flex';
     if (trendCard) trendCard.style.display = 'block';
   } else if (overviewMode === 'month') {
@@ -536,17 +536,17 @@ function renderTypeDetailTable(tbody) {
     return;
   }
 
-  tbody.innerHTML = data.map(d => {
-    const lastYear = data.find(x => x.month === d.month.replace(/\d{4}/, m => String(Number(m) - 1)));
-    let yoy = '-';
-    if (lastYear && lastYear.amount > 0) {
-      yoy = `${((d.amount - lastYear.amount) / lastYear.amount * 100).toFixed(1)}%`;
+  tbody.innerHTML = data.map((d, i) => {
+    const prev = data[i + 1];
+    let mom = '-';
+    if (prev && prev.amount > 0) {
+      mom = `${((d.amount - prev.amount) / prev.amount * 100).toFixed(1)}%`;
     }
     return `<tr>
       <td>${d.month}</td>
       <td class="mono">¥${fmtNum(d.amount)}</td>
       <td class="mono" style="color:var(--gold);">${d.pct.toFixed(1)}%</td>
-      <td class="mono">${yoy}</td>
+      <td class="mono">${mom}</td>
     </tr>`;
   }).join('');
 }
