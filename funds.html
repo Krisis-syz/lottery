@@ -654,7 +654,13 @@
 
       <!-- 趋势图 -->
       <div class="chart-card">
-        <div class="chart-card-title">资金趋势</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div class="chart-card-title" style="margin-bottom:0;">资金趋势</div>
+          <div class="chart-tabs" id="trendToggle" style="display:none;">
+            <button class="chart-tab active" onclick="toggleTrendDataset(0)">金额</button>
+            <button class="chart-tab" onclick="toggleTrendDataset(1)">占比</button>
+          </div>
+        </div>
         <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
       </div>
 

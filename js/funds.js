@@ -157,20 +157,38 @@ function updateOverviewVisibility() {
   const tableCard = document.getElementById('tableCard');
   const tableTitle = document.getElementById('tableTitle');
   const tableHead = document.getElementById('tableHead');
+  const trendToggle = document.getElementById('trendToggle');
 
   if (overviewMode === 'type') {
     if (pieCard) pieCard.style.display = 'none';
     if (tableCard) tableCard.style.display = 'block';
     if (tableTitle) tableTitle.textContent = '月度明细';
     if (tableHead) tableHead.innerHTML = '<tr><th>月份</th><th>金额</th><th>占比</th><th>总额</th></tr>';
+    if (trendToggle) trendToggle.style.display = 'flex';
   } else if (overviewMode === 'month') {
     if (pieCard) pieCard.style.display = 'block';
     if (tableCard) tableCard.style.display = 'none';
+    if (trendToggle) trendToggle.style.display = 'none';
   } else {
     if (pieCard) pieCard.style.display = 'block';
     if (tableCard) tableCard.style.display = 'block';
     if (tableTitle) tableTitle.textContent = '月度明细';
     if (tableHead) tableHead.innerHTML = '<tr><th>月份</th><th>总额</th><th>收支</th><th>环比</th><th>同比</th></tr>';
+    if (trendToggle) trendToggle.style.display = 'none';
+  }
+}
+
+let trendActiveDataset = 0; // 0=金额, 1=占比
+
+function toggleTrendDataset(idx) {
+  trendActiveDataset = idx;
+  document.querySelectorAll('#trendToggle .chart-tab').forEach((btn, i) => {
+    btn.classList.toggle('active', i === idx);
+  });
+  if (trendChart && trendChart.data.datasets.length === 2) {
+    trendChart.data.datasets[0].hidden = idx !== 0;
+    trendChart.data.datasets[1].hidden = idx !== 1;
+    trendChart.update();
   }
 }
 
@@ -300,7 +318,6 @@ function renderTypeTrendChart(ctx) {
   let data = Object.entries(map).map(([m, v]) => ({ month: m, value: v }));
   data.sort((a, b) => a.month.localeCompare(b.month));
 
-  // 计算占比
   const totals = getMonthlyTotals();
   data = data.map(d => ({
     ...d,
@@ -318,7 +335,8 @@ function renderTypeTrendChart(ctx) {
           borderColor: '#f59e0b',
           backgroundColor: 'rgba(245, 158, 11, 0.08)',
           fill: true, tension: 0.35, pointRadius: 3, borderWidth: 2,
-          yAxisID: 'y'
+          yAxisID: 'y',
+          hidden: trendActiveDataset !== 0
         },
         {
           label: '占比',
@@ -327,15 +345,14 @@ function renderTypeTrendChart(ctx) {
           backgroundColor: 'rgba(59, 130, 246, 0.08)',
           fill: true, tension: 0.35, pointRadius: 3, borderWidth: 2,
           borderDash: [5, 5],
-          yAxisID: 'y1'
+          yAxisID: 'y1',
+          hidden: trendActiveDataset !== 1
         }
       ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { display: true, position: 'top', labels: { color: '#9ca3af', font: { size: 11 }, usePointStyle: true, pointStyleWidth: 8, padding: 12 } }
-      },
+      plugins: { legend: { display: false } },
       scales: {
         x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { maxTicksLimit: 5, color: '#6b7280', font: { size: 10 } } },
         y: { type: 'linear', position: 'left', grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#f59e0b', font: { size: 10 }, callback: v => '¥' + (v >= 1000 ? (v/1000).toFixed(1) + 'k' : v) } },
