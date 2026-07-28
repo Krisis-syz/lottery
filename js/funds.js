@@ -185,7 +185,7 @@ function updateOverviewVisibility() {
     if (prevPieCard) prevPieCard.style.display = 'none';
     if (tableCard) tableCard.style.display = 'block';
     if (tableTitle) tableTitle.textContent = '月度明细';
-    if (tableHead) tableHead.innerHTML = '<tr><th>月份</th><th>总额</th><th>收支</th><th>环比</th><th>同比</th></tr>';
+    if (tableHead) tableHead.innerHTML = '<tr><th>月份</th><th>总额</th><th>收支</th><th>环比</th></tr>';
     if (trendToggle) trendToggle.style.display = 'none';
     if (trendRangeGroup) trendRangeGroup.style.display = 'flex';
     if (trendCard) trendCard.style.display = 'block';
@@ -219,8 +219,8 @@ function toggleTrendDataset(idx) {
   if (trendChart && trendChart.data.datasets.length === 2) {
     trendChart.data.datasets[0].hidden = idx !== 0;
     trendChart.data.datasets[1].hidden = idx !== 1;
-    trendChart.options.scales.y.display = idx === 0;
-    trendChart.options.scales.y1.display = idx === 1;
+    trendChart.options.scales.y.ticks.display = idx === 0;
+    trendChart.options.scales.y1.ticks.display = idx === 1;
     trendChart.update();
   }
 }
@@ -323,9 +323,10 @@ function renderTrendChart() {
       labels: data.map(d => d.month),
       datasets: [{
         data: data.map(d => d.value),
-        borderColor: '#f59e0b',
+        borderColor: '#fbbf24',
         backgroundColor: gradient,
-        fill: true, tension: 0.4, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2
+        pointBackgroundColor: '#fbbf24',
+        fill: true, tension: 0.4, pointRadius: 2.5, pointHoverRadius: 5, borderWidth: 2.5
       }]
     },
     options: {
@@ -333,7 +334,7 @@ function renderTrendChart() {
       plugins: { legend: { display: false } },
       scales: {
         x: { grid: { color: 'rgba(128,128,128,0.1)' }, ticks: { maxTicksLimit: 6, color: '#6b7280', font: { size: 10 } } },
-        y: { grid: { color: 'rgba(128,128,128,0.1)' }, ticks: { color: '#6b7280', font: { size: 10 }, callback: v => '¥' + (v >= 1000 ? (v/1000).toFixed(1) + 'k' : v) } }
+        y: { border: { display: false }, grid: { color: 'rgba(128,128,128,0.1)', drawTicks: false }, ticks: { color: '#6b7280', font: { size: 10 }, callback: v => '¥' + (v >= 1000 ? (v/1000).toFixed(1) + 'k' : v) } }
       }
     }
   });
@@ -359,14 +360,14 @@ function renderTypeTrendChart(ctx) {
 
   const canvas = ctx.getContext('2d');
   const gradientGold = canvas.createLinearGradient(0, 0, 0, 250);
-  gradientGold.addColorStop(0, 'rgba(245, 158, 11, 0.25)');
-  gradientGold.addColorStop(0.6, 'rgba(245, 158, 11, 0.08)');
-  gradientGold.addColorStop(1, 'rgba(245, 158, 11, 0.0)');
+  gradientGold.addColorStop(0, 'rgba(251, 191, 36, 0.3)');
+  gradientGold.addColorStop(0.6, 'rgba(251, 191, 36, 0.08)');
+  gradientGold.addColorStop(1, 'rgba(251, 191, 36, 0.0)');
 
   const gradientBlue = canvas.createLinearGradient(0, 0, 0, 250);
-  gradientBlue.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
-  gradientBlue.addColorStop(0.6, 'rgba(59, 130, 246, 0.06)');
-  gradientBlue.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
+  gradientBlue.addColorStop(0, 'rgba(96, 165, 250, 0.25)');
+  gradientBlue.addColorStop(0.6, 'rgba(96, 165, 250, 0.06)');
+  gradientBlue.addColorStop(1, 'rgba(96, 165, 250, 0.0)');
 
   trendChart = new Chart(canvas, {
     type: 'line',
@@ -376,19 +377,20 @@ function renderTypeTrendChart(ctx) {
         {
           label: '金额',
           data: data.map(d => d.value),
-          borderColor: '#f59e0b',
+          borderColor: '#fbbf24',
           backgroundColor: gradientGold,
-          fill: true, tension: 0.4, pointRadius: 3, borderWidth: 2,
+          pointBackgroundColor: '#fbbf24',
+          fill: true, tension: 0.4, pointRadius: 2.5, borderWidth: 2.5,
           yAxisID: 'y',
           hidden: trendActiveDataset !== 0
         },
         {
           label: '占比',
           data: data.map(d => d.pct),
-          borderColor: '#3b82f6',
+          borderColor: '#60a5fa',
           backgroundColor: gradientBlue,
-          fill: true, tension: 0.4, pointRadius: 3, borderWidth: 2,
-          borderDash: [5, 5],
+          pointBackgroundColor: '#60a5fa',
+          fill: true, tension: 0.4, pointRadius: 2.5, borderWidth: 2.5,
           yAxisID: 'y1',
           hidden: trendActiveDataset !== 1
         }
@@ -399,8 +401,8 @@ function renderTypeTrendChart(ctx) {
       plugins: { legend: { display: false } },
       scales: {
         x: { grid: { color: 'rgba(128,128,128,0.1)' }, ticks: { maxTicksLimit: 6, color: '#6b7280', font: { size: 10 } } },
-        y: { type: 'linear', position: 'left', display: trendActiveDataset === 0, grid: { color: 'rgba(128,128,128,0.1)' }, ticks: { color: '#f59e0b', font: { size: 10 }, callback: v => '¥' + (v >= 1000 ? (v/1000).toFixed(1) + 'k' : v) } },
-        y1: { type: 'linear', position: 'left', display: trendActiveDataset === 1, grid: { drawOnChartArea: false }, ticks: { color: '#3b82f6', font: { size: 10 }, callback: v => v.toFixed(0) + '%' }, min: 0, max: 100 }
+        y: { type: 'linear', position: 'left', border: { display: false }, grid: { color: 'rgba(128,128,128,0.1)', drawTicks: false }, ticks: { display: trendActiveDataset === 0, color: '#6b7280', font: { size: 10 }, callback: v => '¥' + (v >= 1000 ? (v/1000).toFixed(1) + 'k' : v) } },
+        y1: { type: 'linear', position: 'left', border: { display: false }, grid: { drawOnChartArea: false, drawTicks: false }, ticks: { display: trendActiveDataset === 1, color: '#6b7280', font: { size: 10 }, callback: v => v.toFixed(0) + '%' }, min: 0, max: 100 }
       }
     }
   });
@@ -505,7 +507,7 @@ function renderOverviewTable() {
   let data = Object.entries(totals).map(([m, t]) => ({ month: m, total: t })).sort((a, b) => b.month.localeCompare(a.month));
 
   if (data.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px;">暂无记录</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px;">暂无记录</td></tr>';
     if (showMoreBtn) showMoreBtn.style.display = 'none';
     return;
   }
@@ -516,10 +518,9 @@ function renderOverviewTable() {
   tbody.innerHTML = visible.map((d, i) => {
     const fullIdx = data.indexOf(d);
     const prev = data[fullIdx + 1];
-    const lastYear = data.find(x => x.month === d.month.replace(/\d{4}/, m => String(Number(m) - 1)));
 
-    let change = '-', mom = '-', yoy = '-';
-    let changeColor = '', momColor = '', yoyColor = '';
+    let change = '-', mom = '-';
+    let changeColor = '', momColor = '';
     if (prev) {
       const diff = d.total - prev.total;
       change = `${diff >= 0 ? '+' : '-'}¥${fmtNum(Math.abs(diff))}`;
@@ -530,18 +531,11 @@ function renderOverviewTable() {
         momColor = momVal >= 0 ? 'var(--success)' : 'var(--danger)';
       }
     }
-    if (lastYear && lastYear.total > 0) {
-      const yoyVal = ((d.total - lastYear.total) / lastYear.total * 100);
-      yoy = `${yoyVal >= 0 ? '+' : ''}${yoyVal.toFixed(1)}%`;
-      yoyColor = yoyVal >= 0 ? 'var(--success)' : 'var(--danger)';
-    }
-
     return `<tr>
       <td>${d.month}</td>
       <td class="mono">¥${fmtNum(d.total)}</td>
       <td class="mono" style="color:${changeColor}">${change}</td>
       <td class="mono" style="color:${momColor}">${mom}</td>
-      <td class="mono" style="color:${yoyColor}">${yoy}</td>
     </tr>`;
   }).join('');
 
