@@ -17,257 +17,474 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="js/supabase.min.js"></script>
   <style>
-    .fund-summary {
+    /* ========== 顶部导航 ========== */
+    .fund-nav {
+      display: flex;
+      align-items: center;
+      padding: 0 0 16px;
+      gap: 12px;
+    }
+
+    .fund-back {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
       background: var(--bg-card);
       border: 1px solid var(--glass-border);
-      border-radius: var(--radius);
-      padding: 24px 20px;
-      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 1.1rem;
+      transition: var(--transition);
+      flex-shrink: 0;
+    }
+
+    .fund-back:hover { border-color: var(--gold); color: var(--gold); }
+
+    .fund-nav-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      flex: 1;
+    }
+
+    /* ========== 底部 Tab 栏 ========== */
+    .fund-tabs {
+      display: flex;
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: 14px;
+      padding: 4px;
+      margin-bottom: 20px;
       backdrop-filter: blur(20px);
     }
 
-    .fund-total {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 2rem;
-      font-weight: 700;
-      color: var(--gold);
-      margin-bottom: 4px;
+    .fund-tab {
+      flex: 1;
+      padding: 10px 0;
+      border: none;
+      border-radius: 11px;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
     }
 
-    .fund-change {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.875rem;
-      margin-bottom: 16px;
+    .fund-tab.active {
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      color: #000;
+      font-weight: 600;
+      box-shadow: 0 2px 8px var(--gold-glow);
     }
 
-    .fund-change.positive { color: var(--success); }
-    .fund-change.negative { color: var(--danger); }
-
-    .fund-sources-row {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
+    .fund-tab-icon {
+      display: block;
+      font-size: 1.1rem;
+      margin-bottom: 2px;
     }
 
-    .fund-source-chip {
+    /* ========== Tab 内容 ========== */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ========== FAB 按钮 ========== */
+    .fab {
+      position: fixed;
+      bottom: 90px;
+      right: 20px;
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      border: none;
+      color: #000;
+      font-size: 1.5rem;
+      font-weight: 300;
       display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 6px 12px;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 20px;
-      font-size: 0.8rem;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 20px var(--gold-glow);
+      transition: all 0.3s ease;
+      z-index: 100;
     }
 
-    .fund-source-dot {
+    .fab:hover { transform: translateY(-2px) scale(1.05); }
+    .fab:active { transform: scale(0.95); }
+
+    /* ========== 资金卡片 ========== */
+    .fund-card {
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 18px 16px;
+      margin-bottom: 12px;
+      backdrop-filter: blur(20px);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .fund-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      border-radius: 4px 0 0 4px;
+    }
+
+    .fund-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .fund-card-name {
+      font-size: 0.95rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .fund-card-dot {
       width: 8px;
       height: 8px;
       border-radius: 50%;
     }
 
-    .fund-source-chip .amount {
-      font-family: 'JetBrains Mono', monospace;
-      color: var(--text-primary);
-    }
-
-    .fund-source-chip .name {
-      color: var(--text-secondary);
-    }
-
-    /* Tab buttons */
-    .chart-tabs {
+    .fund-card-actions {
       display: flex;
-      gap: 4px;
+      gap: 6px;
     }
 
-    .chart-tab {
-      padding: 4px 12px;
+    .fund-card-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
       border: 1px solid var(--glass-border);
-      border-radius: 16px;
       background: transparent;
-      color: var(--text-secondary);
+      color: var(--text-muted);
       font-size: 0.75rem;
       cursor: pointer;
-      transition: var(--transition);
-    }
-
-    .chart-tab.active {
-      background: var(--gold);
-      color: #000;
-      border-color: var(--gold);
-    }
-
-    /* Record form */
-    .record-form {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .record-row {
       display: flex;
       align-items: center;
-      gap: 12px;
+      justify-content: center;
+      transition: all 0.2s ease;
     }
 
-    .record-label {
-      width: 70px;
-      font-size: 0.875rem;
-      color: var(--text-secondary);
-      flex-shrink: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+    .fund-card-btn:hover { border-color: var(--text-secondary); color: var(--text-primary); }
+    .fund-card-btn.danger:hover { border-color: #ef4444; color: #ef4444; }
+
+    .fund-card-input-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    .record-input {
+    .fund-card-currency {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .fund-card-input {
       flex: 1;
       padding: 10px 12px;
       background: var(--bg-secondary);
       border: 1px solid var(--glass-border);
-      border-radius: var(--radius-sm);
+      border-radius: 10px;
       color: var(--text-primary);
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.95rem;
+      font-size: 1.1rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
     }
 
-    .record-input:focus {
+    .fund-card-input:focus {
       outline: none;
       border-color: var(--gold);
+      box-shadow: 0 0 0 3px var(--gold-glow);
     }
 
-    .record-input::placeholder {
+    .fund-card-input::placeholder { color: var(--text-muted); font-weight: 400; }
+
+    .fund-card-hint {
+      margin-top: 8px;
+      font-size: 0.75rem;
       color: var(--text-muted);
     }
 
-    /* Source management */
-    .source-item {
-      display: flex;
-      justify-content: space-between;
+    /* ========== 新增资金弹窗 ========== */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
       align-items: center;
-      padding: 12px 16px;
-      background: var(--bg-card);
-      border: 1px solid var(--glass-border);
-      border-radius: var(--radius-sm);
-      margin-bottom: 8px;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(4px);
     }
 
-    .source-info {
+    .modal-overlay.show { display: flex; }
+
+    .modal-box {
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      width: 85%;
+      max-width: 340px;
+      padding: 24px 20px;
+      animation: scaleIn 0.25s ease;
+    }
+
+    @keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+
+    .modal-title {
+      font-size: 1rem;
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .modal-input {
+      width: 100%;
+      padding: 12px 14px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      margin-bottom: 16px;
+      transition: all 0.2s ease;
+    }
+
+    .modal-input:focus { outline: none; border-color: var(--gold); }
+    .modal-input::placeholder { color: var(--text-muted); }
+
+    .modal-btns {
       display: flex;
-      align-items: center;
       gap: 10px;
     }
 
-    .source-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-
-    .source-name {
+    .modal-btn {
+      flex: 1;
+      padding: 11px;
+      border-radius: 10px;
       font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
     }
 
-    .source-actions {
+    .modal-btn-cancel {
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+    }
+
+    .modal-btn-confirm {
+      background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+      color: #000;
+      font-weight: 600;
+    }
+
+    /* ========== 概览 Tab ========== */
+    .overview-total-card {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(245, 158, 11, 0.04));
+      border: 1px solid rgba(245, 158, 11, 0.2);
+      border-radius: 16px;
+      padding: 24px 20px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .overview-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .overview-amount {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--gold);
+    }
+
+    .overview-sub {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      margin-top: 4px;
+    }
+
+    .overview-sub.up { color: var(--success); }
+    .overview-sub.down { color: var(--danger); }
+
+    /* 筛选条 */
+    .filter-bar {
       display: flex;
-      gap: 8px;
+      gap: 6px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
     }
 
-    .source-btn {
-      padding: 4px 10px;
+    .filter-btn {
+      padding: 7px 14px;
       border: 1px solid var(--glass-border);
-      border-radius: 6px;
+      border-radius: 20px;
       background: transparent;
       color: var(--text-secondary);
-      font-size: 0.75rem;
+      font-size: 0.8rem;
       cursor: pointer;
-      transition: var(--transition);
+      transition: all 0.2s ease;
     }
 
-    .source-btn:hover {
-      border-color: var(--text-secondary);
-      color: var(--text-primary);
-    }
-
-    .source-btn.danger:hover {
-      border-color: #ef4444;
-      color: #ef4444;
-    }
-
-    .add-source-row {
-      display: flex;
-      gap: 8px;
-      margin-top: 8px;
-    }
-
-    .add-source-input {
-      flex: 1;
-      padding: 10px 12px;
-      background: var(--bg-secondary);
-      border: 1px solid var(--glass-border);
-      border-radius: var(--radius-sm);
-      color: var(--text-primary);
-      font-size: 0.9rem;
-    }
-
-    .add-source-input:focus {
-      outline: none;
+    .filter-btn.active {
+      background: var(--gold);
+      color: #000;
       border-color: var(--gold);
+      font-weight: 600;
     }
 
-    .add-source-input::placeholder {
-      color: var(--text-muted);
+    .filter-select {
+      padding: 7px 12px;
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-size: 0.8rem;
+      cursor: pointer;
     }
 
-    /* Detail table */
-    .detail-table {
-      width: 100%;
-      border-collapse: collapse;
+    .filter-select:focus { outline: none; border-color: var(--gold); }
+
+    /* 图表 */
+    .chart-card {
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 16px;
+      backdrop-filter: blur(20px);
     }
 
-    .detail-table th {
+    .chart-card-title {
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 12px;
+      color: var(--text-secondary);
+    }
+
+    .chart-wrap { position: relative; height: 200px; }
+
+    /* 饼图布局 */
+    .pie-row {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .pie-box { width: 150px; height: 150px; flex-shrink: 0; }
+
+    .legend-list { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+    }
+
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .legend-name { color: var(--text-secondary); }
+    .legend-val { font-family: 'JetBrains Mono', monospace; color: var(--text-primary); margin-left: auto; }
+
+    /* 记录表格 */
+    .rec-table { width: 100%; border-collapse: collapse; }
+
+    .rec-table th {
       text-align: left;
-      padding: 8px 12px;
-      font-size: 0.75rem;
+      padding: 8px 10px;
+      font-size: 0.7rem;
       color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.5px;
       border-bottom: 1px solid var(--glass-border);
     }
 
-    .detail-table td {
-      padding: 10px 12px;
-      font-size: 0.875rem;
+    .rec-table td {
+      padding: 10px 10px;
+      font-size: 0.85rem;
       border-bottom: 1px solid rgba(255, 255, 255, 0.03);
     }
 
-    .detail-table .mono {
-      font-family: 'JetBrains Mono', monospace;
+    .rec-table .mono { font-family: 'JetBrains Mono', monospace; }
+
+    /* ========== AI 报告 Tab ========== */
+    .report-current {
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+      backdrop-filter: blur(20px);
     }
 
-    /* Report */
-    .report-content {
+    .report-month-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .report-body {
       background: var(--bg-secondary);
-      border-radius: var(--radius-sm);
+      border-radius: 12px;
       padding: 16px;
-      font-size: 0.875rem;
-      line-height: 1.7;
+      font-size: 0.85rem;
+      line-height: 1.8;
       color: var(--text-secondary);
       white-space: pre-wrap;
       max-height: 400px;
       overflow-y: auto;
     }
 
+    .report-empty {
+      text-align: center;
+      padding: 30px 20px;
+    }
+
+    .report-empty-icon {
+      font-size: 2.5rem;
+      margin-bottom: 12px;
+      opacity: 0.5;
+    }
+
+    .report-empty-text {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
     .report-loading {
       text-align: center;
       padding: 30px 20px;
-      color: var(--text-secondary);
     }
 
-    .report-loading .spinner {
-      width: 32px;
-      height: 32px;
+    .spinner {
+      width: 36px;
+      height: 36px;
       border: 3px solid var(--glass-border);
       border-top-color: var(--gold);
       border-radius: 50%;
@@ -275,258 +492,219 @@
       margin: 0 auto 12px;
     }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-    .report-select {
-      padding: 8px 12px;
-      background: var(--bg-secondary);
-      border: 1px solid var(--glass-border);
-      border-radius: var(--radius-sm);
-      color: var(--text-primary);
-      font-size: 0.85rem;
-      margin-bottom: 12px;
-    }
-
-    .report-select:focus {
-      outline: none;
-      border-color: var(--gold);
-    }
-
-    /* Pie chart */
-    .pie-wrapper {
+    .btn-generate {
       display: flex;
-      align-items: center;
-      gap: 20px;
-    }
-
-    .pie-canvas-wrap {
-      width: 160px;
-      height: 160px;
-      flex-shrink: 0;
-    }
-
-    .pie-legend {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .pie-legend-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.8rem;
-    }
-
-    .pie-legend-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-
-    .pie-legend-label {
-      color: var(--text-secondary);
-    }
-
-    .pie-legend-value {
-      font-family: 'JetBrains Mono', monospace;
-      color: var(--text-primary);
-      margin-left: auto;
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 40px 20px;
-      color: var(--text-secondary);
-    }
-
-    /* Buttons */
-    .btn-primary {
-      display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 12px 20px;
+      gap: 8px;
+      padding: 14px 20px;
       background: linear-gradient(135deg, var(--gold), var(--gold-dark));
       color: #000;
       border: none;
-      border-radius: var(--radius-sm);
+      border-radius: 14px;
       font-weight: 600;
       font-size: 0.9rem;
       cursor: pointer;
-      transition: var(--transition);
       width: 100%;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 12px var(--gold-glow);
     }
 
-    .btn-primary:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 15px var(--gold-glow);
+    .btn-generate:hover { transform: translateY(-1px); }
+    .btn-generate:disabled { opacity: 0.5; pointer-events: none; }
+
+    .history-dropdown {
+      position: relative;
+      margin-bottom: 16px;
     }
 
-    .btn-primary:disabled {
-      opacity: 0.5;
-      pointer-events: none;
-    }
-
-    .btn-sm {
-      padding: 6px 14px;
-      border: 1px solid var(--glass-border);
-      border-radius: 6px;
-      background: transparent;
-      color: var(--text-secondary);
-      font-size: 0.8rem;
-      cursor: pointer;
-      transition: var(--transition);
-    }
-
-    .btn-sm:hover {
-      border-color: var(--gold);
-      color: var(--gold);
-    }
-
-    .section-card {
+    .history-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 12px 16px;
       background: var(--bg-card);
       border: 1px solid var(--glass-border);
-      border-radius: var(--radius);
-      padding: 20px;
-      margin-bottom: 16px;
-      backdrop-filter: blur(20px);
+      border-radius: 12px;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
     }
 
-    .section-card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
+    .history-btn:hover { border-color: var(--gold); }
+
+    .history-btn-arrow {
+      transition: transform 0.2s ease;
+      font-size: 0.7rem;
     }
 
-    .section-card-title {
+    .history-btn-arrow.open { transform: rotate(180deg); }
+
+    .history-list {
+      display: none;
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      margin-top: 6px;
+      overflow: hidden;
+    }
+
+    .history-list.show { display: block; animation: fadeIn 0.2s ease; }
+
+    .history-item {
+      padding: 12px 16px;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+
+    .history-item:last-child { border-bottom: none; }
+    .history-item:hover { background: var(--bg-secondary); color: var(--text-primary); }
+    .history-item.active { color: var(--gold); font-weight: 500; }
+
+    /* ========== 通用 ========== */
+    .empty-hint {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .empty-hint-icon {
+      font-size: 2.5rem;
+      margin-bottom: 12px;
+      opacity: 0.4;
+    }
+
+    .save-toast {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(16, 185, 129, 0.95);
+      color: #fff;
+      padding: 12px 28px;
+      border-radius: 12px;
       font-size: 0.9rem;
       font-weight: 500;
+      z-index: 2000;
+      animation: toastIn 0.3s ease;
     }
 
-    .chart-wrapper {
-      position: relative;
-      height: 220px;
-    }
+    @keyframes toastIn { from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
 
     @media (max-width: 768px) {
-      .chart-wrapper { height: 180px; }
-      .pie-wrapper { flex-direction: column; }
-      .pie-canvas-wrap { width: 140px; height: 140px; }
+      .chart-wrap { height: 170px; }
+      .pie-row { flex-direction: column; }
+      .pie-box { width: 130px; height: 130px; }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <a href="profile.html" class="back-btn" style="display:inline-flex;align-items:center;gap:6px;color:var(--text-secondary);font-size:0.875rem;text-decoration:none;margin-bottom:20px;transition:var(--transition);">← 返回</a>
+    <!-- 顶部导航 -->
+    <div class="fund-nav">
+      <a href="profile.html" class="fund-back">←</a>
+      <span class="fund-nav-title">资金管理</span>
+    </div>
 
-    <!-- 总资产卡片 -->
-    <section class="fund-summary" id="summaryCard">
-      <div class="fund-total" id="totalAmount">--</div>
-      <div class="fund-change" id="monthChange">加载中...</div>
-      <div class="fund-sources-row" id="sourcesChips"></div>
-    </section>
+    <!-- Tab 栏 -->
+    <div class="fund-tabs">
+      <button class="fund-tab active" onclick="switchTab('fill')">
+        <span class="fund-tab-icon">✏️</span>填写资金
+      </button>
+      <button class="fund-tab" onclick="switchTab('overview')">
+        <span class="fund-tab-icon">📊</span>资金总览
+      </button>
+      <button class="fund-tab" onclick="switchTab('report')">
+        <span class="fund-tab-icon">🤖</span>AI 报告
+      </button>
+    </div>
 
-    <!-- 趋势图 -->
-    <section class="section-card">
-      <div class="section-card-header">
-        <span class="section-card-title">资金趋势</span>
-        <div class="chart-tabs">
-          <button class="chart-tab active" onclick="switchTrendView('year')">近一年</button>
-          <button class="chart-tab" onclick="switchTrendView('all')">全部</button>
-        </div>
-      </div>
-      <div class="chart-wrapper">
-        <canvas id="trendChart"></canvas>
-      </div>
-    </section>
-
-    <!-- 资金占比饼图 -->
-    <section class="section-card">
-      <div class="section-card-header">
-        <span class="section-card-title">资金占比</span>
-        <select class="report-select" id="pieMonthSelect" onchange="updatePieChart()" style="margin-bottom:0;width:auto;">
-        </select>
-      </div>
-      <div class="pie-wrapper">
-        <div class="pie-canvas-wrap">
-          <canvas id="pieChart"></canvas>
-        </div>
-        <div class="pie-legend" id="pieLegend"></div>
-      </div>
-    </section>
-
-    <!-- 详细记录 -->
-    <section class="section-card">
-      <div class="section-card-header">
-        <span class="section-card-title">详细记录</span>
-        <div class="chart-tabs">
-          <button class="chart-tab active" onclick="switchRecordView('year')">近一年</button>
-          <button class="chart-tab" onclick="switchRecordView('all')">全部</button>
-        </div>
-      </div>
-      <div style="overflow-x:auto;">
-        <table class="detail-table">
-          <thead>
-            <tr>
-              <th>月份</th>
-              <th>总额</th>
-              <th>收支</th>
-              <th>环比</th>
-              <th>同比</th>
-            </tr>
-          </thead>
-          <tbody id="detailTableBody"></tbody>
-        </table>
-      </div>
-      <div class="empty-state" id="emptyDetail" style="display:none;padding:20px;">
-        <p>暂无记录</p>
-      </div>
-    </section>
-
-    <!-- 资金来源管理 -->
-    <section class="section-card">
-      <div class="section-card-header">
-        <span class="section-card-title">资金来源</span>
-      </div>
-      <div id="sourceList"></div>
-      <div class="add-source-row">
-        <input type="text" class="add-source-input" id="newSourceName" placeholder="新增资金名称...">
-        <button class="btn-sm" onclick="addNewSource()">添加</button>
-      </div>
-    </section>
-
-    <!-- 本月记录 -->
-    <section class="section-card">
-      <div class="section-card-header">
-        <span class="section-card-title" id="recordTitle">本月记录</span>
-      </div>
-      <div class="record-form" id="recordForm">
-        <div class="empty-state" style="padding:20px;">
-          <p>请先添加资金来源</p>
-        </div>
-      </div>
-      <button class="btn-primary" id="saveBtn" onclick="saveMonthlyRecords()" style="margin-top:12px;display:none;">
+    <!-- ===== Tab 1: 填写资金 ===== -->
+    <div class="tab-content active" id="tabFill">
+      <div id="fillCards"></div>
+      <button class="btn-generate" id="saveFillBtn" onclick="saveFillRecords()" style="margin-top:8px;display:none;">
         保存本月记录
       </button>
-    </section>
+    </div>
 
-    <!-- AI 月度报告 -->
-    <section class="section-card">
-      <div class="section-card-header">
-        <span class="section-card-title">月度报告</span>
-        <select class="report-select" id="reportMonthSelect" onchange="loadReport()" style="margin-bottom:0;width:auto;">
-        </select>
+    <!-- ===== Tab 2: 资金总览 ===== -->
+    <div class="tab-content" id="tabOverview">
+      <!-- 筛选条 -->
+      <div class="filter-bar" id="filterBar">
+        <button class="filter-btn active" onclick="setOverviewMode('total')">总资金</button>
+        <button class="filter-btn" onclick="setOverviewMode('type')">按类型</button>
+        <button class="filter-btn" onclick="setOverviewMode('month')">按月份</button>
+        <select class="filter-select" id="filterSelect" style="display:none;" onchange="onFilterSelect()"></select>
       </div>
-      <div id="reportContainer">
-        <button class="btn-primary" id="generateBtn" onclick="generateReport()">
-          一键生成报告
+
+      <!-- 总金额卡片 -->
+      <div class="overview-total-card" id="overviewCard">
+        <div class="overview-label">总资产</div>
+        <div class="overview-amount" id="overviewAmount">--</div>
+        <div class="overview-sub" id="overviewChange"></div>
+      </div>
+
+      <!-- 趋势图 -->
+      <div class="chart-card">
+        <div class="chart-card-title">资金趋势</div>
+        <div class="chart-wrap"><canvas id="trendChart"></canvas></div>
+      </div>
+
+      <!-- 饼图 -->
+      <div class="chart-card">
+        <div class="chart-card-title">资金占比</div>
+        <div class="pie-row">
+          <div class="pie-box"><canvas id="pieChart"></canvas></div>
+          <div class="legend-list" id="pieLegend"></div>
+        </div>
+      </div>
+
+      <!-- 详细记录 -->
+      <div class="chart-card">
+        <div class="chart-card-title">月度明细</div>
+        <div style="overflow-x:auto;">
+          <table class="rec-table">
+            <thead><tr><th>月份</th><th>总额</th><th>收支</th><th>环比</th><th>同比</th></tr></thead>
+            <tbody id="overviewTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Tab 3: AI 报告 ===== -->
+    <div class="tab-content" id="tabReport">
+      <div class="report-current" id="reportCurrent"></div>
+      <div class="history-dropdown">
+        <button class="history-btn" onclick="toggleHistory()">
+          <span>查看历史报告</span>
+          <span class="history-btn-arrow" id="historyArrow">▼</span>
         </button>
+        <div class="history-list" id="historyList"></div>
       </div>
-    </section>
+    </div>
+
+    <!-- FAB 新增按钮 -->
+    <button class="fab" id="fabBtn" onclick="showAddModal()">+</button>
+
+    <!-- 新增资金弹窗 -->
+    <div class="modal-overlay" id="addModal">
+      <div class="modal-box">
+        <div class="modal-title">新增资金来源</div>
+        <input type="text" class="modal-input" id="addModalInput" placeholder="例如：支付宝、银行卡...">
+        <div class="modal-btns">
+          <button class="modal-btn modal-btn-cancel" onclick="hideAddModal()">取消</button>
+          <button class="modal-btn modal-btn-confirm" onclick="confirmAddSource()">添加</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="js/api.js"></script>
