@@ -499,22 +499,47 @@
     function calculateConsecutiveLosses() {
       if (!selectedPlan || !selectedPlan.records) return;
 
+      // 按日期倒序排列
       const sorted = [...selectedPlan.records].sort((a, b) => b.date.localeCompare(a.date));
       consecutiveLosses = [];
       totalLossAmount = 0;
 
+      // 跳过未结算的记录，找到最新的有效结果
+      let latestValidResult = null;
       for (const record of sorted) {
+        if (record.result === 'win' || record.result === 'lose') {
+          latestValidResult = record.result;
+          break;
+        }
+      }
+
+      // 如果最新有效结果是中奖，显示提示
+      if (latestValidResult === 'win') {
+        renderLossInfo(true);
+        renderLossList();
+        document.getElementById('step3').classList.add('disabled');
+        return;
+      }
+
+      // 从最新有效结果开始，累加连续未中
+      let foundFirstValid = false;
+      for (const record of sorted) {
+        if (!record.result) {
+          // 未结算，跳过
+          continue;
+        }
+        if (!foundFirstValid) {
+          foundFirstValid = true;
+        }
         if (record.result === 'lose') {
           consecutiveLosses.push(record);
           totalLossAmount += record.betAmount;
         } else if (record.result === 'win') {
           break;
-        } else {
-          break;
         }
       }
 
-      renderLossInfo();
+      renderLossInfo(false);
       renderLossList();
 
       if (consecutiveLosses.length > 0) {
@@ -522,15 +547,28 @@
       }
     }
 
-    function renderLossInfo() {
+    function renderLossInfo(isWin) {
       const container = document.getElementById('lossInfo');
+
+      if (isWin) {
+        container.innerHTML = `
+          <div class="info-card" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05)); border-color: rgba(239, 68, 68, 0.2);">
+            <div class="info-row">
+              <span class="info-label">状态</span>
+              <span class="info-value" style="color: #ef4444;">最近有中奖</span>
+            </div>
+          </div>
+        `;
+        document.getElementById('step3').classList.add('disabled');
+        return;
+      }
 
       if (consecutiveLosses.length === 0) {
         container.innerHTML = `
           <div class="info-card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05)); border-color: rgba(16, 185, 129, 0.2);">
             <div class="info-row">
               <span class="info-label">状态</span>
-              <span class="info-value" style="color: #10b981;">最近有中奖 ✨</span>
+              <span class="info-value" style="color: #10b981;">暂无亏损记录</span>
             </div>
           </div>
         `;
