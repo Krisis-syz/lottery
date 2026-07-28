@@ -366,8 +366,8 @@ function renderTypeTrendChart(ctx) {
       plugins: { legend: { display: false } },
       scales: {
         x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { maxTicksLimit: 5, color: '#6b7280', font: { size: 10 } } },
-        y: { type: 'linear', position: 'left', grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#f59e0b', font: { size: 10 }, callback: v => '¥' + (v >= 1000 ? (v/1000).toFixed(1) + 'k' : v) } },
-        y1: { type: 'linear', position: 'left', grid: { drawOnChartArea: false }, ticks: { color: '#3b82f6', font: { size: 10 }, callback: v => v.toFixed(0) + '%' }, min: 0, max: 100 }
+        y: { type: 'linear', position: 'left', display: trendActiveDataset === 0, grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#f59e0b', font: { size: 10 }, callback: v => '¥' + (v >= 1000 ? (v/1000).toFixed(1) + 'k' : v) } },
+        y1: { type: 'linear', position: 'left', display: trendActiveDataset === 1, grid: { drawOnChartArea: false }, ticks: { color: '#3b82f6', font: { size: 10 }, callback: v => v.toFixed(0) + '%' }, min: 0, max: 100 }
       }
     }
   });
