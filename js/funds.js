@@ -160,7 +160,7 @@ function updateOverviewVisibility() {
   const tableTitle = document.getElementById('tableTitle');
   const tableHead = document.getElementById('tableHead');
   const trendToggle = document.getElementById('trendToggle');
-  const trendCard = document.querySelector('#tabOverview .chart-card:first-child');
+  const trendCard = document.getElementById('trendCard');
 
   if (overviewMode === 'type') {
     if (pieCard) pieCard.style.display = 'none';
@@ -197,6 +197,8 @@ function toggleTrendDataset(idx) {
   if (trendChart && trendChart.data.datasets.length === 2) {
     trendChart.data.datasets[0].hidden = idx !== 0;
     trendChart.data.datasets[1].hidden = idx !== 1;
+    trendChart.options.scales.y.display = idx === 0;
+    trendChart.options.scales.y1.display = idx === 1;
     trendChart.update();
   }
 }
