@@ -547,15 +547,17 @@ function renderTypeDetailTable(tbody) {
 
   tbody.innerHTML = data.map((d, i) => {
     const prev = data[i + 1];
-    let mom = '-';
+    let mom = '-', momColor = '';
     if (prev && prev.amount > 0) {
-      mom = `${((d.amount - prev.amount) / prev.amount * 100).toFixed(1)}%`;
+      const momVal = (d.amount - prev.amount) / prev.amount * 100;
+      mom = `${momVal >= 0 ? '+' : ''}${momVal.toFixed(1)}%`;
+      momColor = momVal >= 0 ? 'var(--success)' : 'var(--danger)';
     }
     return `<tr>
       <td>${d.month}</td>
       <td class="mono">¥${fmtNum(d.amount)}</td>
       <td class="mono" style="color:var(--gold);">${d.pct.toFixed(1)}%</td>
-      <td class="mono">${mom}</td>
+      <td class="mono" style="color:${momColor}">${mom}</td>
     </tr>`;
   }).join('');
 }
