@@ -167,7 +167,7 @@ function updateOverviewVisibility() {
     if (prevPieCard) prevPieCard.style.display = 'none';
     if (tableCard) tableCard.style.display = 'block';
     if (tableTitle) tableTitle.textContent = '月度明细';
-    if (tableHead) tableHead.innerHTML = '<tr><th>月份</th><th>金额</th><th>占比</th><th>总额</th></tr>';
+    if (tableHead) tableHead.innerHTML = '<tr><th>月份</th><th>金额</th><th>占比</th><th>同比</th></tr>';
     if (trendToggle) trendToggle.style.display = 'flex';
     if (trendCard) trendCard.style.display = 'block';
   } else if (overviewMode === 'month') {
@@ -527,7 +527,6 @@ function renderTypeDetailTable(tbody) {
     .map(([m, v]) => ({
       month: m,
       amount: v,
-      total: totals[m] || 0,
       pct: totals[m] > 0 ? (v / totals[m] * 100) : 0
     }))
     .sort((a, b) => b.month.localeCompare(a.month));
@@ -537,14 +536,19 @@ function renderTypeDetailTable(tbody) {
     return;
   }
 
-  tbody.innerHTML = data.map(d => `
-    <tr>
+  tbody.innerHTML = data.map(d => {
+    const lastYear = data.find(x => x.month === d.month.replace(/\d{4}/, m => String(Number(m) - 1)));
+    let yoy = '-';
+    if (lastYear && lastYear.amount > 0) {
+      yoy = `${((d.amount - lastYear.amount) / lastYear.amount * 100).toFixed(1)}%`;
+    }
+    return `<tr>
       <td>${d.month}</td>
       <td class="mono">¥${fmtNum(d.amount)}</td>
       <td class="mono" style="color:var(--gold);">${d.pct.toFixed(1)}%</td>
-      <td class="mono">¥${fmtNum(d.total)}</td>
-    </tr>`
-  ).join('');
+      <td class="mono">${yoy}</td>
+    </tr>`;
+  }).join('');
 }
 
 // ============ Tab 3: AI 报告 ============
