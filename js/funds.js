@@ -7,6 +7,7 @@ let trendChart = null;
 let pieChart = null;
 let overviewMode = 'total';
 let activeReportMonth = null;
+let tableShowCount = 12;
 
 const COLORS = ['#f59e0b', '#3b82f6', '#10b981', '#8b5cf6', '#ef4444', '#06b6d4', '#f97316', '#ec4899'];
 
@@ -18,6 +19,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderFillTab();
   renderOverviewTab();
   renderReportTab();
+
+  // 当月已填写则默认切到总览
+  const hasFilled = allSources.some(s => getAmountForMonth(s.id, currentMonth) > 0);
+  if (hasFilled) switchTab('overview');
 });
 
 async function loadAllData() {
@@ -38,16 +43,10 @@ function switchTab(tab) {
   });
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   document.getElementById('tab' + cap(tab)).classList.add('active');
-
-  // FAB 只在填写 tab 显示
   document.getElementById('fabBtn').style.display = tab === 'fill' ? 'flex' : 'none';
 
-  // 切换到总览时刷新图表（Chart.js 需要可见才能正确渲染）
   if (tab === 'overview') {
-    setTimeout(() => {
-      renderTrendChart();
-      renderPieChart();
-    }, 50);
+    setTimeout(() => { renderTrendChart(); renderPieChart(); }, 50);
   }
 }
 
@@ -59,18 +58,12 @@ function renderFillTab() {
   const saveBtn = document.getElementById('saveFillBtn');
 
   if (allSources.length === 0) {
-    container.innerHTML = `
-      <div class="empty-hint">
-        <div class="empty-hint-icon">💰</div>
-        <div>还没有资金来源</div>
-        <div style="margin-top:6px;font-size:0.8rem;">点击右下角 + 添加</div>
-      </div>`;
+    container.innerHTML = `<div class="empty-hint"><div class="empty-hint-icon">💰</div><div>还没有资金来源</div><div style="margin-top:6px;font-size:0.8rem;">点击右下角 + 添加</div></div>`;
     saveBtn.style.display = 'none';
     return;
   }
 
   saveBtn.style.display = 'flex';
-
   container.innerHTML = allSources.map((s, i) => {
     const color = COLORS[i % COLORS.length];
     const existing = getAmountForMonth(s.id, currentMonth);
@@ -79,18 +72,12 @@ function renderFillTab() {
       <div class="fund-card" style="border-left:none;">
         <div style="position:absolute;top:0;left:0;width:4px;height:100%;background:${color};border-radius:4px 0 0 4px;"></div>
         <div class="fund-card-top">
-          <div class="fund-card-name">
-            <span class="fund-card-dot" style="background:${color}"></span>
-            ${s.name}
-          </div>
-          <div class="fund-card-actions">
-            <button class="fund-card-btn danger" onclick="deleteFundSource('${s.id}','${s.name}')" title="删除">✕</button>
-          </div>
+          <div class="fund-card-name"><span class="fund-card-dot" style="background:${color}"></span>${s.name}</div>
+          <div class="fund-card-actions"><button class="fund-card-btn danger" onclick="deleteFundSource('${s.id}','${s.name}')" title="删除">✕</button></div>
         </div>
         <div class="fund-card-input-row">
           <span class="fund-card-currency">¥</span>
-          <input type="number" class="fund-card-input" data-source-id="${s.id}"
-            placeholder="0.00" value="${hasRecord ? existing : ''}" step="0.01" min="0">
+          <input type="number" class="fund-card-input" data-source-id="${s.id}" placeholder="0.00" value="${hasRecord ? existing : ''}" step="0.01" min="0">
         </div>
         ${!hasRecord ? '<div class="fund-card-hint">本月尚未填写</div>' : ''}
       </div>`;
@@ -101,65 +88,48 @@ async function saveFillRecords() {
   const inputs = document.querySelectorAll('#fillCards .fund-card-input');
   const records = [];
   inputs.forEach(input => {
-    records.push({
-      sourceId: input.dataset.sourceId,
-      amount: parseFloat(input.value) || 0
-    });
+    records.push({ sourceId: input.dataset.sourceId, amount: parseFloat(input.value) || 0 });
   });
-
   if (records.length === 0) return;
-
   try {
     await fundApi.saveRecords(currentMonth, records);
     allRecords = await fundApi.getAllRecords();
     renderFillTab();
     showToast('保存成功');
-  } catch (e) {
-    alert('保存失败: ' + e.message);
-  }
+  } catch (e) { alert('保存失败: ' + e.message); }
 }
 
 function showToast(msg) {
-  const toast = document.createElement('div');
-  toast.className = 'save-toast';
-  toast.textContent = msg;
-  document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 1500);
+  const t = document.createElement('div');
+  t.className = 'save-toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 1500);
 }
 
-// ============ 新增资金弹窗 ============
+// ============ 新增/删除资金 ============
 function showAddModal() {
   document.getElementById('addModal').classList.add('show');
-  const input = document.getElementById('addModalInput');
-  input.value = '';
-  setTimeout(() => input.focus(), 100);
+  const inp = document.getElementById('addModalInput');
+  inp.value = '';
+  setTimeout(() => inp.focus(), 100);
 }
 
-function hideAddModal() {
-  document.getElementById('addModal').classList.remove('show');
-}
+function hideAddModal() { document.getElementById('addModal').classList.remove('show'); }
 
-document.getElementById('addModal').addEventListener('click', (e) => {
-  if (e.target === e.currentTarget) hideAddModal();
-});
-
-document.getElementById('addModalInput').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') confirmAddSource();
-});
+document.getElementById('addModal').addEventListener('click', e => { if (e.target === e.currentTarget) hideAddModal(); });
+document.getElementById('addModalInput').addEventListener('keydown', e => { if (e.key === 'Enter') confirmAddSource(); });
 
 async function confirmAddSource() {
-  const input = document.getElementById('addModalInput');
-  const name = input.value.trim();
+  const inp = document.getElementById('addModalInput');
+  const name = inp.value.trim();
   if (!name) return;
-
   try {
     await fundApi.addSource(name);
     allSources = await fundApi.getSources();
     hideAddModal();
     renderFillTab();
-  } catch (e) {
-    alert('添加失败: ' + e.message);
-  }
+  } catch (e) { alert('添加失败: ' + e.message); }
 }
 
 async function deleteFundSource(id, name) {
@@ -170,9 +140,7 @@ async function deleteFundSource(id, name) {
     allRecords = await fundApi.getAllRecords();
     renderFillTab();
     renderOverviewTab();
-  } catch (e) {
-    alert('删除失败: ' + e.message);
-  }
+  } catch (e) { alert('删除失败: ' + e.message); }
 }
 
 // ============ Tab 2: 资金总览 ============
@@ -181,14 +149,41 @@ function renderOverviewTab() {
   renderTrendChart();
   renderPieChart();
   renderOverviewTable();
+  updateOverviewVisibility();
+}
+
+function updateOverviewVisibility() {
+  const pieCard = document.getElementById('pieCard');
+  const tableCard = document.getElementById('tableCard');
+  const tableTitle = document.getElementById('tableTitle');
+  const tableHead = document.getElementById('tableHead');
+
+  if (overviewMode === 'type') {
+    if (pieCard) pieCard.style.display = 'none';
+    if (tableCard) tableCard.style.display = 'block';
+    if (tableTitle) tableTitle.textContent = '月度明细';
+    if (tableHead) tableHead.innerHTML = '<tr><th>月份</th><th>金额</th><th>占比</th><th>总额</th></tr>';
+  } else if (overviewMode === 'month') {
+    if (pieCard) pieCard.style.display = 'block';
+    if (tableCard) tableCard.style.display = 'none';
+  } else {
+    if (pieCard) pieCard.style.display = 'block';
+    if (tableCard) tableCard.style.display = 'block';
+    if (tableTitle) tableTitle.textContent = '月度明细';
+    if (tableHead) tableHead.innerHTML = '<tr><th>月份</th><th>总额</th><th>收支</th><th>环比</th><th>同比</th></tr>';
+  }
 }
 
 function setOverviewMode(mode) {
   overviewMode = mode;
+  tableShowCount = 12;
   document.querySelectorAll('.filter-bar .filter-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.textContent.includes(
-      mode === 'total' ? '总资金' : mode === 'type' ? '类型' : '月份'
-    ));
+    const text = btn.textContent;
+    btn.classList.toggle('active',
+      (mode === 'total' && text.includes('总资金')) ||
+      (mode === 'type' && text.includes('类型')) ||
+      (mode === 'month' && text.includes('月份'))
+    );
   });
 
   const select = document.getElementById('filterSelect');
@@ -197,23 +192,17 @@ function setOverviewMode(mode) {
     select.innerHTML = allSources.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
   } else if (mode === 'month') {
     select.style.display = 'block';
-    const months = getAvailableMonths();
-    select.innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join('');
+    select.innerHTML = getAvailableMonths().map(m => `<option value="${m}">${m}</option>`).join('');
   } else {
     select.style.display = 'none';
   }
 
-  updateOverviewCard();
-  renderTrendChart();
-  renderPieChart();
-  renderOverviewTable();
+  renderOverviewTab();
 }
 
 function onFilterSelect() {
-  updateOverviewCard();
-  renderTrendChart();
-  renderPieChart();
-  renderOverviewTable();
+  tableShowCount = 12;
+  renderOverviewTab();
 }
 
 function updateOverviewCard() {
@@ -221,78 +210,58 @@ function updateOverviewCard() {
   const changeEl = document.getElementById('overviewChange');
   const labelEl = document.querySelector('.overview-label');
 
+  let total = 0, prev = 0, label = '总资产';
+
   if (overviewMode === 'total') {
-    const total = getMonthTotal(currentMonth);
-    const prev = getMonthTotal(getPrevMonth(currentMonth));
-    amountEl.textContent = '¥' + fmtNum(total);
-    labelEl.textContent = '总资产';
-    const diff = total - prev;
-    if (prev > 0 || total > 0) {
-      const pct = prev > 0 ? ((diff / prev) * 100).toFixed(1) : '0.0';
-      changeEl.textContent = `较上月 ${diff >= 0 ? '+' : ''}${fmtNum(diff)} (${diff >= 0 ? '+' : ''}${pct}%)`;
-      changeEl.className = 'overview-sub ' + (diff >= 0 ? 'up' : 'down');
-    } else {
-      changeEl.textContent = '暂无数据';
-      changeEl.className = 'overview-sub';
-    }
+    total = getMonthTotal(currentMonth);
+    prev = getMonthTotal(getPrevMonth(currentMonth));
+    label = '总资产';
   } else if (overviewMode === 'type') {
-    const sourceId = document.getElementById('filterSelect').value;
-    const source = allSources.find(s => s.id === sourceId);
-    if (!source) { amountEl.textContent = '--'; return; }
-    const amt = getAmountForMonth(sourceId, currentMonth);
-    const prev = getAmountForMonth(sourceId, getPrevMonth(currentMonth));
-    amountEl.textContent = '¥' + fmtNum(amt);
-    labelEl.textContent = source.name + ' 资产';
-    const diff = amt - prev;
-    if (prev > 0 || amt > 0) {
-      const pct = prev > 0 ? ((diff / prev) * 100).toFixed(1) : '0.0';
-      changeEl.textContent = `较上月 ${diff >= 0 ? '+' : ''}${fmtNum(diff)} (${diff >= 0 ? '+' : ''}${pct}%)`;
-      changeEl.className = 'overview-sub ' + (diff >= 0 ? 'up' : 'down');
-    } else {
-      changeEl.textContent = '暂无数据';
-      changeEl.className = 'overview-sub';
-    }
+    const sid = document.getElementById('filterSelect')?.value;
+    const src = allSources.find(s => s.id === sid);
+    if (!src) { amountEl.textContent = '--'; return; }
+    total = getAmountForMonth(sid, currentMonth);
+    prev = getAmountForMonth(sid, getPrevMonth(currentMonth));
+    label = src.name + ' 资产';
   } else {
-    const month = document.getElementById('filterSelect').value || currentMonth;
-    const total = getMonthTotal(month);
-    amountEl.textContent = '¥' + fmtNum(total);
-    labelEl.textContent = month + ' 总资产';
-    const prev = getMonthTotal(getPrevMonth(month));
-    const diff = total - prev;
-    if (prev > 0 || total > 0) {
-      const pct = prev > 0 ? ((diff / prev) * 100).toFixed(1) : '0.0';
-      changeEl.textContent = `较上月 ${diff >= 0 ? '+' : ''}${fmtNum(diff)} (${diff >= 0 ? '+' : ''}${pct}%)`;
-      changeEl.className = 'overview-sub ' + (diff >= 0 ? 'up' : 'down');
-    } else {
-      changeEl.textContent = '暂无数据';
-      changeEl.className = 'overview-sub';
-    }
+    const month = document.getElementById('filterSelect')?.value || currentMonth;
+    total = getMonthTotal(month);
+    prev = getMonthTotal(getPrevMonth(month));
+    label = month + ' 总资产';
+  }
+
+  amountEl.textContent = '¥' + fmtNum(total);
+  labelEl.textContent = label;
+
+  const diff = total - prev;
+  if (prev > 0 || total > 0) {
+    const pct = prev > 0 ? ((diff / prev) * 100).toFixed(1) : '0.0';
+    changeEl.textContent = `较上月 ${diff >= 0 ? '+' : ''}${fmtNum(diff)} (${diff >= 0 ? '+' : ''}${pct}%)`;
+    changeEl.className = 'overview-sub ' + (diff >= 0 ? 'up' : 'down');
+  } else {
+    changeEl.textContent = '暂无数据';
+    changeEl.className = 'overview-sub';
   }
 }
 
+// ============ 趋势图 ============
 function renderTrendChart() {
   const ctx = document.getElementById('trendChart');
   if (!ctx) return;
   if (trendChart) trendChart.destroy();
 
-  let data = [];
+  if (overviewMode === 'type') {
+    renderTypeTrendChart(ctx);
+    return;
+  }
 
+  let data = [];
   if (overviewMode === 'total') {
     const totals = getMonthlyTotals();
     data = Object.entries(totals).map(([m, t]) => ({ month: m, value: t }));
-  } else if (overviewMode === 'type') {
-    const sourceId = document.getElementById('filterSelect')?.value;
-    if (!sourceId) return;
-    const map = {};
-    allRecords.filter(r => r.sourceId === sourceId).forEach(r => {
-      map[r.yearMonth] = r.amount;
-    });
-    data = Object.entries(map).map(([m, v]) => ({ month: m, value: v }));
   } else {
-    const month = document.getElementById('filterSelect')?.value || currentMonth;
     const totals = getMonthlyTotals();
     data = Object.entries(totals).map(([m, t]) => ({ month: m, value: t }));
-    // 高亮选中月份
   }
 
   data.sort((a, b) => a.month.localeCompare(b.month));
@@ -305,16 +274,11 @@ function renderTrendChart() {
         data: data.map(d => d.value),
         borderColor: '#f59e0b',
         backgroundColor: 'rgba(245, 158, 11, 0.08)',
-        fill: true,
-        tension: 0.35,
-        pointRadius: 3,
-        pointHoverRadius: 5,
-        borderWidth: 2
+        fill: true, tension: 0.35, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2
       }]
     },
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
+      responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false } },
       scales: {
         x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { maxTicksLimit: 5, color: '#6b7280', font: { size: 10 } } },
@@ -324,14 +288,79 @@ function renderTrendChart() {
   });
 }
 
+function renderTypeTrendChart(ctx) {
+  const sourceId = document.getElementById('filterSelect')?.value;
+  if (!sourceId) return;
+
+  const map = {};
+  allRecords.filter(r => r.sourceId === sourceId).forEach(r => {
+    map[r.yearMonth] = r.amount;
+  });
+
+  let data = Object.entries(map).map(([m, v]) => ({ month: m, value: v }));
+  data.sort((a, b) => a.month.localeCompare(b.month));
+
+  // 计算占比
+  const totals = getMonthlyTotals();
+  data = data.map(d => ({
+    ...d,
+    pct: totals[d.month] > 0 ? (d.value / totals[d.month] * 100) : 0
+  }));
+
+  trendChart = new Chart(ctx.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: data.map(d => d.month),
+      datasets: [
+        {
+          label: '金额',
+          data: data.map(d => d.value),
+          borderColor: '#f59e0b',
+          backgroundColor: 'rgba(245, 158, 11, 0.08)',
+          fill: true, tension: 0.35, pointRadius: 3, borderWidth: 2,
+          yAxisID: 'y'
+        },
+        {
+          label: '占比',
+          data: data.map(d => d.pct),
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59, 130, 246, 0.08)',
+          fill: true, tension: 0.35, pointRadius: 3, borderWidth: 2,
+          borderDash: [5, 5],
+          yAxisID: 'y1'
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: true, position: 'top', labels: { color: '#9ca3af', font: { size: 11 }, usePointStyle: true, pointStyleWidth: 8, padding: 12 } }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { maxTicksLimit: 5, color: '#6b7280', font: { size: 10 } } },
+        y: { type: 'linear', position: 'left', grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#f59e0b', font: { size: 10 }, callback: v => '¥' + (v >= 1000 ? (v/1000).toFixed(1) + 'k' : v) } },
+        y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#3b82f6', font: { size: 10 }, callback: v => v.toFixed(0) + '%' }, min: 0, max: 100 }
+      }
+    }
+  });
+}
+
+// ============ 饼图 ============
 function renderPieChart() {
   const ctx = document.getElementById('pieChart');
   if (!ctx) return;
   if (pieChart) pieChart.destroy();
 
   let month = currentMonth;
+  let title = '资金占比';
+
   if (overviewMode === 'month') {
-    month = document.getElementById('filterSelect')?.value || currentMonth;
+    const selMonth = document.getElementById('filterSelect')?.value || currentMonth;
+    month = getPrevMonth(selMonth);
+    title = '上月资金占比';
+    document.getElementById('pieTitle').textContent = title;
+  } else {
+    document.getElementById('pieTitle').textContent = '资金占比';
   }
 
   const items = allSources.map((s, i) => ({
@@ -351,57 +380,106 @@ function renderPieChart() {
       labels: items.map(s => s.name),
       datasets: [{ data: items.map(s => s.amount), backgroundColor: items.map(s => s.color), borderWidth: 0, hoverOffset: 4 }]
     },
-    options: {
-      responsive: true,
-      maintainAspectRatio: true,
-      cutout: '62%',
-      plugins: { legend: { display: false } }
-    }
+    options: { responsive: true, maintainAspectRatio: true, cutout: '62%', plugins: { legend: { display: false } } }
   });
 
   const total = items.reduce((s, i) => s + i.amount, 0);
   document.getElementById('pieLegend').innerHTML = items.map(s => {
     const pct = total > 0 ? ((s.amount / total) * 100).toFixed(1) : '0';
-    return `<div class="legend-item">
-      <span class="legend-dot" style="background:${s.color}"></span>
-      <span class="legend-name">${s.name}</span>
-      <span class="legend-val">¥${fmtNum(s.amount)} (${pct}%)</span>
-    </div>`;
+    return `<div class="legend-item"><span class="legend-dot" style="background:${s.color}"></span><span class="legend-name">${s.name}</span><span class="legend-val">¥${fmtNum(s.amount)} (${pct}%)</span></div>`;
   }).join('');
 }
 
+// ============ 月度明细表 ============
 function renderOverviewTable() {
   const tbody = document.getElementById('overviewTable');
+  const showMoreBtn = document.getElementById('showMoreBtn');
+
+  if (overviewMode === 'type') {
+    renderTypeDetailTable(tbody);
+    return;
+  }
+
   const totals = getMonthlyTotals();
   let data = Object.entries(totals).map(([m, t]) => ({ month: m, total: t })).sort((a, b) => b.month.localeCompare(a.month));
 
   if (data.length === 0) {
     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px;">暂无记录</td></tr>';
+    if (showMoreBtn) showMoreBtn.style.display = 'none';
     return;
   }
 
-  tbody.innerHTML = data.map((d, i) => {
-    const prev = data[i + 1];
+  const visible = data.slice(0, tableShowCount);
+  const hasMore = data.length > tableShowCount;
+
+  tbody.innerHTML = visible.map((d, i) => {
+    const fullIdx = data.indexOf(d);
+    const prev = data[fullIdx + 1];
     const lastYear = data.find(x => x.month === d.month.replace(/\d{4}/, m => String(Number(m) - 1)));
 
     let change = '-', mom = '-', yoy = '-';
     if (prev) {
       const diff = d.total - prev.total;
       change = `${diff >= 0 ? '+' : ''}¥${fmtNum(diff)}`;
-      if (prev.total > 0) mom = `${((diff / prev.total) * 100).toFixed(1)}%`;
+      if (prev.total > 0) mom = `${diff >= 0 ? '+' : ''}${((diff / prev.total) * 100).toFixed(1)}%`;
     }
     if (lastYear && lastYear.total > 0) {
       yoy = `${((d.total - lastYear.total) / lastYear.total * 100).toFixed(1)}%`;
     }
 
+    const diff = d.total - (prev?.total || 0);
     return `<tr>
       <td>${d.month}</td>
       <td class="mono">¥${fmtNum(d.total)}</td>
-      <td class="mono" style="color:${(d.total - (prev?.total || 0)) >= 0 ? 'var(--success)' : 'var(--danger)'}">${change}</td>
+      <td class="mono" style="color:${diff >= 0 ? 'var(--success)' : 'var(--danger)'}">${change}</td>
       <td class="mono">${mom}</td>
       <td class="mono">${yoy}</td>
     </tr>`;
   }).join('');
+
+  if (showMoreBtn) {
+    showMoreBtn.style.display = hasMore ? 'flex' : 'none';
+  }
+}
+
+function loadMoreRecords() {
+  tableShowCount += 12;
+  renderOverviewTable();
+}
+
+// ============ 按类型 明细表 ============
+function renderTypeDetailTable(tbody) {
+  const sourceId = document.getElementById('filterSelect')?.value;
+  if (!sourceId) return;
+
+  const map = {};
+  allRecords.filter(r => r.sourceId === sourceId).forEach(r => {
+    map[r.yearMonth] = r.amount;
+  });
+
+  const totals = getMonthlyTotals();
+  let data = Object.entries(map)
+    .map(([m, v]) => ({
+      month: m,
+      amount: v,
+      total: totals[m] || 0,
+      pct: totals[m] > 0 ? (v / totals[m] * 100) : 0
+    }))
+    .sort((a, b) => b.month.localeCompare(a.month));
+
+  if (data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px;">暂无记录</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = data.map(d => `
+    <tr>
+      <td>${d.month}</td>
+      <td class="mono">¥${fmtNum(d.amount)}</td>
+      <td class="mono" style="color:var(--gold);">${d.pct.toFixed(1)}%</td>
+      <td class="mono">¥${fmtNum(d.total)}</td>
+    </tr>`
+  ).join('');
 }
 
 // ============ Tab 3: AI 报告 ============
@@ -418,25 +496,13 @@ function renderCurrentReport(month) {
 
   const report = allReports.find(r => r.year_month === targetMonth);
   if (report) {
-    container.innerHTML = `
-      <div class="report-month-label">${displayMonth} 资金报告</div>
-      <div class="report-body">${escapeHtml(report.report_text)}</div>`;
+    container.innerHTML = `<div class="report-month-label">${displayMonth} 资金报告</div><div class="report-body">${escapeHtml(report.report_text)}</div>`;
   } else {
-    // 检查该月是否有记录
     const hasRecords = allRecords.some(r => r.yearMonth === targetMonth);
     if (!hasRecords) {
-      container.innerHTML = `
-        <div class="report-empty">
-          <div class="report-empty-icon">📝</div>
-          <div class="report-empty-text">${displayMonth} 暂无资金记录</div>
-          <div style="margin-top:4px;font-size:0.8rem;color:var(--text-muted);">请先在"填写资金"中记录该月数据</div>
-        </div>`;
+      container.innerHTML = `<div class="report-empty"><div class="report-empty-icon">📝</div><div class="report-empty-text">${displayMonth} 暂无资金记录</div><div style="margin-top:4px;font-size:0.8rem;color:var(--text-muted);">请先在"填写资金"中记录该月数据</div></div>`;
     } else {
-      container.innerHTML = `
-        <div class="report-month-label">${displayMonth} 资金报告</div>
-        <button class="btn-generate" onclick="generateReport('${targetMonth}')">
-          一键生成 ${displayMonth} 报告
-        </button>`;
+      container.innerHTML = `<div class="report-month-label">${displayMonth} 资金报告</div><button class="btn-generate" onclick="generateReport('${targetMonth}')">一键生成 ${displayMonth} 报告</button>`;
     }
   }
 }
@@ -447,19 +513,15 @@ function renderHistoryList() {
     list.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text-muted);font-size:0.85rem;">暂无历史报告</div>';
     return;
   }
-
   list.innerHTML = allReports.map(r => {
     const display = r.year_month.replace('-', '年') + '月';
-    const isActive = r.year_month === activeReportMonth;
-    return `<div class="history-item ${isActive ? 'active' : ''}" onclick="selectHistoryReport('${r.year_month}')">${display}报告</div>`;
+    return `<div class="history-item ${r.year_month === activeReportMonth ? 'active' : ''}" onclick="selectHistoryReport('${r.year_month}')">${display}报告</div>`;
   }).join('');
 }
 
 function toggleHistory() {
-  const list = document.getElementById('historyList');
-  const arrow = document.getElementById('historyArrow');
-  list.classList.toggle('show');
-  arrow.classList.toggle('open');
+  document.getElementById('historyList').classList.toggle('show');
+  document.getElementById('historyArrow').classList.toggle('open');
 }
 
 function selectHistoryReport(month) {
@@ -471,32 +533,20 @@ function selectHistoryReport(month) {
 async function generateReport(month) {
   const container = document.getElementById('reportCurrent');
   const displayMonth = month.replace('-', '年') + '月';
-
   container.innerHTML = `<div class="report-loading"><div class="spinner"></div><div style="color:var(--text-secondary);">正在生成 ${displayMonth} 资金报告...</div></div>`;
 
   try {
     const result = await fundApi.generateReport(month);
     if (result && result.report) {
-      // 刷新报告列表
       allReports = await fundApi.getReports();
-      container.innerHTML = `
-        <div class="report-month-label">${displayMonth} 资金报告</div>
-        <div class="report-body">${escapeHtml(result.report)}</div>`;
+      container.innerHTML = `<div class="report-month-label">${displayMonth} 资金报告</div><div class="report-body">${escapeHtml(result.report)}</div>`;
       renderHistoryList();
     } else {
-      container.innerHTML = `
-        <div style="text-align:center;padding:20px;">
-          <div style="color:var(--text-muted);margin-bottom:12px;">生成失败，请稍后重试</div>
-          <button class="btn-generate" onclick="generateReport('${month}')">重试</button>
-        </div>`;
+      container.innerHTML = `<div style="text-align:center;padding:20px;"><div style="color:var(--text-muted);margin-bottom:12px;">生成失败，请稍后重试</div><button class="btn-generate" onclick="generateReport('${month}')">重试</button></div>`;
     }
   } catch (e) {
     console.error('生成报告失败:', e);
-    container.innerHTML = `
-      <div style="text-align:center;padding:20px;">
-        <div style="color:var(--text-muted);margin-bottom:12px;">${e.message || '生成失败'}</div>
-        <button class="btn-generate" onclick="generateReport('${month}')">重试</button>
-      </div>`;
+    container.innerHTML = `<div style="text-align:center;padding:20px;"><div style="color:var(--text-muted);margin-bottom:12px;">${e.message || '生成失败'}</div><button class="btn-generate" onclick="generateReport('${month}')">重试</button></div>`;
   }
 }
 
@@ -524,9 +574,7 @@ function getAmountForMonth(sourceId, ym) {
 
 function getMonthlyTotals() {
   const totals = {};
-  allRecords.forEach(r => {
-    totals[r.yearMonth] = (totals[r.yearMonth] || 0) + r.amount;
-  });
+  allRecords.forEach(r => { totals[r.yearMonth] = (totals[r.yearMonth] || 0) + r.amount; });
   return totals;
 }
 

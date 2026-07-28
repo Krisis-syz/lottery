@@ -659,8 +659,8 @@
       </div>
 
       <!-- 饼图 -->
-      <div class="chart-card">
-        <div class="chart-card-title">资金占比</div>
+      <div class="chart-card" id="pieCard">
+        <div class="chart-card-title" id="pieTitle">资金占比</div>
         <div class="pie-row">
           <div class="pie-box"><canvas id="pieChart"></canvas></div>
           <div class="legend-list" id="pieLegend"></div>
@@ -668,14 +668,15 @@
       </div>
 
       <!-- 详细记录 -->
-      <div class="chart-card">
-        <div class="chart-card-title">月度明细</div>
+      <div class="chart-card" id="tableCard">
+        <div class="chart-card-title" id="tableTitle">月度明细</div>
         <div style="overflow-x:auto;">
           <table class="rec-table">
-            <thead><tr><th>月份</th><th>总额</th><th>收支</th><th>环比</th><th>同比</th></tr></thead>
+            <thead id="tableHead"><tr><th>月份</th><th>总额</th><th>收支</th><th>环比</th><th>同比</th></tr></thead>
             <tbody id="overviewTable"></tbody>
           </table>
         </div>
+        <button id="showMoreBtn" onclick="loadMoreRecords()" style="display:none;width:100%;padding:10px;margin-top:12px;border:1px solid var(--glass-border);border-radius:10px;background:transparent;color:var(--text-secondary);font-size:0.85rem;cursor:pointer;transition:var(--transition);">查看更多</button>
       </div>
     </div>
 
