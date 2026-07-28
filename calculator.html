@@ -449,9 +449,27 @@
 
     async function loadPlans() {
       try {
+        const sb = getSupabase();
+        const user = await getCurrentUser();
+        console.log('当前用户:', user?.id);
+
         const plans = await api.getPlans();
+        console.log('计划列表:', plans);
+
         const select = document.getElementById('planSelect');
-        plans.forEach(plan => {
+
+        if (!plans || plans.length === 0) {
+          const option = document.createElement('option');
+          option.value = '';
+          option.textContent = '暂无计划，请先创建';
+          option.disabled = true;
+          select.appendChild(option);
+          return;
+        }
+
+        // 只显示进行中的计划
+        const activePlans = plans.filter(p => p.status === 'active');
+        activePlans.forEach(plan => {
           const option = document.createElement('option');
           option.value = plan.id;
           option.textContent = plan.name;
