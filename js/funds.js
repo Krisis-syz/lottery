@@ -371,6 +371,7 @@ function renderTypeTrendChart(ctx) {
       }
     }
   });
+  trendChart.update();
 }
 
 // ============ 饼图 ============
