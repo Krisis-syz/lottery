@@ -490,7 +490,6 @@ function simpleMarkdown(text) {
     if (tr.startsWith('- ') || tr.startsWith('• ')) {
       const content = tr.slice(2);
       if (content.includes('|') && !content.includes('\x00')) {
-        // 普通列表项，用 | 分隔
         const items = content.split('|').map(s => s.trim()).filter(Boolean);
         return '<div style="display:flex;flex-wrap:wrap;gap:6px 12px;margin:6px 0;padding:8px 0;">' +
           items.map(item => {
@@ -499,6 +498,16 @@ function simpleMarkdown(text) {
           }).join('') + '</div>';
       }
       return `<div style="padding-left:12px;margin:3px 0;">• ${content.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')}</div>`;
+    }
+
+    // 不以 - 开头但含 | 分隔符的行（核心指标等）→ 横排指标
+    if (tr.includes('|') && !tr.startsWith('#') && !tr.startsWith('\x00') && tr.split('|').length >= 3) {
+      const items = tr.split('|').map(s => s.trim()).filter(Boolean);
+      return '<div style="display:flex;flex-wrap:wrap;gap:6px 12px;margin:6px 0;padding:8px 0;">' +
+        items.map(item => {
+          let s = item.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+          return `<span style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.15);border-radius:6px;padding:4px 10px;font-size:13px;white-space:nowrap;">${s}</span>`;
+        }).join('') + '</div>';
     }
 
     // 编号列表 1. 2. 3.
