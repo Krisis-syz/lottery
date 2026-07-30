@@ -515,9 +515,9 @@ function simpleMarkdown(text) {
       }).join('');
     }
 
-    // 普通行：加粗
+    // 普通行：加粗，包裹在 div 中确保换行
     line = line.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    return line;
+    return `<div style="margin:4px 0;">${line}</div>`;
   }).join('\n');
 
   // 恢复占位符
