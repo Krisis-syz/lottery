@@ -294,7 +294,7 @@ ${p.dailyDetails.map(d => `| ${d.date} | ${d.invested.toFixed(2)} | ${d.resultTe
 
 ### 章节结构
 
-**本月投注总览分析**（📊）
+**x年x月投注总览分析**（📊）//x替换为对应数字
 - 核心指标汇总
 - 文字分析盈亏原因、资金效率
 -  [chart:trend]
