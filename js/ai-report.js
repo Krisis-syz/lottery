@@ -313,8 +313,8 @@ ${p.dailyDetails.map(d => `| ${d.date} | ${d.invested.toFixed(2)} | ${d.resultTe
 ### 章节结构
 
 **x年x月投注总览分析**（📊）//这里的x要替换为数字
-- 核心指标汇总
-- 文字分析盈亏原因、资金效率
+- 核心指标汇总（以表格形式给出）
+- 分析盈亏原因、资金效率
 -  [chart:trend]
 -  [chart:calendar]
 
@@ -369,7 +369,11 @@ async function generateReport() {
     status.textContent = 'AI 正在分析数据，预计需要 30-60 秒...';
     const sb = getSupabase();
     const { data: result, error } = await sb.functions.invoke('generate-report', { body: { prompt } });
-    if (error) throw error;
+    if (error) {
+      // 尝试获取详细错误信息
+      const detail = result?.error || error.message || JSON.stringify(error);
+      throw new Error(detail);
+    }
 
     const reportText = typeof result === 'string' ? result : (result.reportText || result.report || result.content || result.text || JSON.stringify(result));
 
@@ -387,7 +391,8 @@ async function generateReport() {
   } catch (err) {
     console.error('生成报告失败:', err);
     status.className = 'report-status error';
-    status.textContent = '生成失败：' + err.message;
+    status.textContent = '生成失败：' + (err.message || '未知错误，请查看控制台');
+    status.style.whiteSpace = 'pre-wrap';
   } finally {
     btn.disabled = false;
     btn.textContent = '生成报告';
