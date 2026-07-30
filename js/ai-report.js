@@ -241,6 +241,12 @@ function buildAIPrompt(data) {
 
 【重要】直接输出报告正文，禁止输出任何开场白、问候语、过渡语（如"好的"、"收到"、"以下是"等）。报告以"# 📊 本月投注总览分析"开头。
 
+【颜色规则】使用HTML span标签强调数字：
+- 盈利/正数用红色：<span style="color:#ef4444">数字</span>
+- 亏损/负数用绿色：<span style="color:#10b981">数字</span>
+- 示例：净利润：<span style="color:#ef4444">+3,923.76元</span>
+- 示例：亏损：<span style="color:#10b981">-500.00元</span>
+
 ## 数据说明
 请严格按照以下数据生成报告，不得编造或省略任何数据。
 
@@ -282,9 +288,14 @@ ${p.dailyDetails.map(d => `| ${d.date} | ${d.invested.toFixed(2)} | ${d.resultTe
 ## 输出格式要求
 
 1. 全文使用标准Markdown，分四大章节，每章节开头用对应emoji引导
-2. 全部金额统一保留2位小数，重点数字可加粗
-3. 禁止省略任意模块数据，不遗漏计划，不编造数据
-4. 排版简洁商务风，无多余花哨表情
+2. 全部金额统一保留2位小数
+3. 重点数字使用颜色强调：
+   - 盈利/正数用红色：<span style="color:#ef4444">数字</span>
+   - 亏损/负数用绿色：<span style="color:#10b981">数字</span>
+   - 例如：净利润：<span style="color:#ef4444">+3,923.76元</span>，收益率：<span style="color:#ef4444">30.30%</span>
+   - 例如：亏损：<span style="color:#10b981">-500.00元</span>
+4. 禁止省略任意模块数据，不遗漏计划，不编造数据
+5. 排版简洁商务风，无多余花哨表情
 
 ### 图表标记
 在报告中适当位置插入以下标记，系统会自动渲染图表：
@@ -427,6 +438,8 @@ function simpleMarkdown(text) {
 
   // 保护已有的 HTML div（图表占位符等）
   text = text.replace(/<div[^>]*>.*?<\/div>/gs, m => keep(m));
+  // 保护带颜色的 span 标签
+  text = text.replace(/<span style="color:[^"]*">.*?<\/span>/g, m => keep(m));
   // 保护 [chart:xxx] 原始标记
   text = text.replace(/\[chart:(\w+)\]/g, (m, t) => keep(`<div class="chart-placeholder" data-chart-id="chart-dyn-${t}"></div>`));
 
