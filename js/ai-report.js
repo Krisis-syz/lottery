@@ -313,7 +313,7 @@ ${p.dailyDetails.map(d => `| ${d.date} | ${d.invested.toFixed(2)} | ${d.resultTe
 -  [chart:calendar]
 
 **分计划投注分析**（📋）
-- 按本月利润降序排列的表格（计划名称 | 本月投入 | 本月利润 | 累计总利润 | 环比(%) | 最大连黑 | ）
+- 按本月利润降序排列的表格（包括：|计划名称 | 本月投入 | 本月利润 | 累计总利润 | 环比(%) | 最大连黑 | ）
 -  [chart:treemap]
 - 数据深度分析：盈利贡献、亏损拖累、环比变化、连黑稳定性等
 
@@ -326,7 +326,7 @@ ${p.dailyDetails.map(d => `| ${d.date} | ${d.invested.toFixed(2)} | ${d.resultTe
 - 整体盈亏结论
 - 核心盈利来源
 - 主要亏损原因
-- 下月优化方向`;
+- 下月优化方向;
 
   return prompt;
 }
@@ -734,8 +734,8 @@ function renderTreemap(canvas, planStats) {
     }
 
     // 计划名称（左侧）
-    ctx.fillStyle = '#e5e7eb';
-    ctx.font = '12px Outfit, sans-serif';
+    ctx.fillStyle = '#f9fafb';
+    ctx.font = 'bold 12px Outfit, sans-serif';
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
     const displayName = plan.name.length > 8 ? plan.name.substring(0, 7) + '…' : plan.name;
