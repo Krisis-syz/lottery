@@ -255,12 +255,10 @@ function buildAIPrompt(data) {
 
 ## 一、本月投注总览
 
-- 总投入：${totalInvested.toFixed(2)} 元
-- 总回收：${totalReturned.toFixed(2)} 元
-- 净利润：${totalProfit.toFixed(2)} 元
-- 收益率：${roi.toFixed(2)}%
-- 投注天数：${data.activeDays} 天
-- 投注笔数：${data.totalRecords} 笔
+【核心指标】必须按以下格式，每个指标独占一行，用 | 分隔成两行：
+- 总投入：${totalInvested.toFixed(2)} 元 | 总回收：${totalReturned.toFixed(2)} 元
+- 净利润：${totalProfit.toFixed(2)} 元 | 收益率：${roi.toFixed(2)}%
+- 投注天数：${data.activeDays} 天 | 投注笔数：${data.totalRecords} 笔
 
 ### 每日数据
 
@@ -298,6 +296,14 @@ ${p.dailyDetails.map(d => `| ${d.date} | ${d.invested.toFixed(2)} | ${d.resultTe
 4. 禁止省略任意模块数据，不遗漏计划，不编造数据
 5. 排版简洁商务风，无多余花哨表情
 
+【换行规则】每个要点必须独占一行！
+- 例如：核心盈利来源：梨子半全场（+1,632.10元）
+- 例如：主要亏损原因：霸道计划亏损（-17.16元）
+- 禁止将多个要点合并到同一行！
+
+【表格规则】分计划分析必须包含以下所有列，缺一不可：
+| 计划名称 | 本月投入 | 本月利润 | 累计总利润 | 上月利润 | 环比(%) | 最大连黑 | 投注笔数 |
+
 ### 图表标记
 在报告中适当位置插入以下标记，系统会自动渲染图表：
 - 在第一章节末尾插入 [chart:trend] 渲染本月累计利润趋势图
@@ -323,12 +329,18 @@ ${p.dailyDetails.map(d => `| ${d.date} | ${d.invested.toFixed(2)} | ${d.resultTe
 - 可行性总结：是否可持续、是否需调整
 
 **本月投注总结**（📝）
-- 整体盈亏结论
-- 核心盈利来源
-- 主要亏损原因
+- 整体盈亏结论（一句话总结盈亏和收益率）
+- 核心盈利来源（列出盈利最多的计划，每个计划一行）
+- 主要亏损原因（列出亏损项目，每个一行）
 - 下月优化方向（分条列出，每条换行）
 
-【重要】每个要点必须单独一行，禁止将多个要点合并到同一行！`;
+【强制换行规则】
+1. 每个要点必须以 `- ` 开头，独占一行
+2. 禁止将多个要点合并到同一行！
+3. 例如：
+- 整体盈亏：本月净利润+3,923.76元，收益率30.30%
+- 核心盈利来源：梨子半全场（+1,632.10元）
+- 主要亏损原因：霸道计划（-17.16元）`;
 
   return prompt;
 }
@@ -546,6 +558,12 @@ function renderTrendChart(canvas, dailyProfits) {
   canvas.style.width = '100%';
   canvas.style.height = H + 'px';
 
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  const textColor = isLight ? '#6b7280' : '#6b7280';
+  const gridColor = isLight ? 'rgba(0,0,0,0.06)' : 'rgba(255,255,255,0.06)';
+  const zeroColor = isLight ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.12)';
+  const dotStroke = isLight ? '#ffffff' : '#0a0e17';
+
   const pad = { top: 24, right: 16, bottom: 36, left: 52 };
   const cW = W - pad.left - pad.right;
   const cH = H - pad.top - pad.bottom;
@@ -566,7 +584,7 @@ function renderTrendChart(canvas, dailyProfits) {
   ctx.clearRect(0, 0, W, H);
 
   // 网格线
-  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.strokeStyle = gridColor;
   ctx.lineWidth = 1;
   for (let i = 0; i <= 5; i++) {
     const y = pad.top + (cH / 5) * i;
@@ -576,7 +594,7 @@ function renderTrendChart(canvas, dailyProfits) {
   // 零线
   if (minVal < 0 && maxVal > 0) {
     const zeroY = getY(0);
-    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+    ctx.strokeStyle = zeroColor;
     ctx.setLineDash([4, 4]);
     ctx.beginPath(); ctx.moveTo(pad.left, zeroY); ctx.lineTo(W - pad.right, zeroY); ctx.stroke();
     ctx.setLineDash([]);
@@ -625,13 +643,13 @@ function renderTrendChart(canvas, dailyProfits) {
     ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
     ctx.fillStyle = v >= 0 ? '#ef4444' : '#10b981';
     ctx.fill();
-    ctx.strokeStyle = '#0a0e17';
+    ctx.strokeStyle = dotStroke;
     ctx.lineWidth = 2;
     ctx.stroke();
   });
 
   // X 轴标签
-  ctx.fillStyle = '#6b7280';
+  ctx.fillStyle = textColor;
   ctx.font = '10px JetBrains Mono, monospace';
   ctx.textAlign = 'center';
   const maxLabels = Math.min(values.length, 7);
@@ -697,7 +715,7 @@ function renderTreemap(canvas, planStats) {
   const W = parent.clientWidth;
   const barH = 32;
   const gap = 8;
-  const padLeft = 90;
+  const padLeft = 100;
   const padRight = 70;
   const padTop = 10;
   const items = [...planStats].sort((a, b) => b.profit - a.profit);
@@ -709,12 +727,17 @@ function renderTreemap(canvas, planStats) {
 
   ctx.clearRect(0, 0, W, H);
 
+  // 检测是否亮色主题
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  const textColor = isLight ? '#1e293b' : '#f9fafb';
+  const zeroLineColor = isLight ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.15)';
+
   const maxAbs = Math.max(1, ...items.map(p => Math.abs(p.profit)));
   const chartW = W - padLeft - padRight;
   const centerX = padLeft + chartW / 2;
 
   // 零线
-  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+  ctx.strokeStyle = zeroLineColor;
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(centerX, padTop);
@@ -727,7 +750,7 @@ function renderTreemap(canvas, planStats) {
     const isProfit = plan.profit >= 0;
 
     // 柱体
-    const color = isProfit ? 'rgba(239,68,68,0.7)' : 'rgba(16,185,129,0.7)';
+    const color = isProfit ? 'rgba(239,68,68,0.8)' : 'rgba(16,185,129,0.8)';
     ctx.fillStyle = color;
     if (isProfit) {
       ctx.fillRect(centerX, y + 2, barW, barH - 4);
@@ -736,15 +759,15 @@ function renderTreemap(canvas, planStats) {
     }
 
     // 计划名称（左侧）
-    ctx.fillStyle = '#f9fafb';
-    ctx.font = 'bold 12px Outfit, sans-serif';
+    ctx.fillStyle = textColor;
+    ctx.font = 'bold 13px Outfit, sans-serif';
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
     const displayName = plan.name.length > 8 ? plan.name.substring(0, 7) + '…' : plan.name;
     ctx.fillText(displayName, padLeft - 10, y + barH / 2);
 
     // 数值标注
-    ctx.fillStyle = isProfit ? '#fbbf24' : '#34d399';
+    ctx.fillStyle = isProfit ? '#dc2626' : '#059669';
     ctx.font = 'bold 11px JetBrains Mono, monospace';
     ctx.textAlign = isProfit ? 'left' : 'right';
     const label = `${isProfit ? '+' : ''}${plan.profit.toFixed(0)}`;
