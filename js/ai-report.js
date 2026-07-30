@@ -270,9 +270,9 @@ ${dailyProfits.map(d => `| ${d.date} | ${d.dayProfit.toFixed(2)} | ${d.cumulativ
 
 ## 二、分计划分析
 
-| 计划名称 | 本月投入 | 本月利润 | 累计总利润 | 上月利润 | 环比(%) | 最大连黑 | 投注笔数 |
-|----------|----------|----------|------------|----------|---------|----------|----------|
-${planStats.map(p => `| ${p.name} | ${p.invested.toFixed(2)} | ${p.profit.toFixed(2)} | ${p.cumProfit.toFixed(2)} | ${p.prevProfit.toFixed(2)} | ${p.momChange !== null ? p.momChange.toFixed(1) : 'N/A'} | ${p.maxLoseStreak} | ${p.recordCount} |`).join('\n')}
+| 计划名称 | 本月投入 | 本月利润 | 累计总利润 | 环比(%) | 最大连黑 | 投注笔数 |
+|----------|----------|----------|------------|---------|----------|----------|
+${planStats.map(p => `| ${p.name} | ${p.invested.toFixed(2)} | ${p.profit.toFixed(2)} | ${p.cumProfit.toFixed(2)} | ${p.momChange !== null ? p.momChange.toFixed(1) : 'N/A'} | ${p.maxLoseStreak} | ${p.recordCount} |`).join('\n')}
 
 ### 各计划每日明细
 ${planStats.map(p => `
@@ -302,7 +302,7 @@ ${p.dailyDetails.map(d => `| ${d.date} | ${d.invested.toFixed(2)} | ${d.resultTe
 - 禁止将多个要点合并到同一行！
 
 【表格规则】分计划分析必须包含以下所有列，缺一不可：
-| 计划名称 | 本月投入 | 本月利润 | 累计总利润 | 上月利润 | 环比(%) | 最大连黑 | 投注笔数 |
+| 计划名称 | 本月投入 | 本月利润 | 累计总利润 | 环比(%) | 最大连黑 | 投注笔数 |
 
 ### 图表标记
 在报告中适当位置插入以下标记，系统会自动渲染图表：
@@ -462,9 +462,9 @@ function simpleMarkdown(text) {
   text = text.replace(/(?:^|\n)(\|.+\|)\n(\|[-| :]+\|)\n((?:\|.+\|\n?)+)/g, function(_, h, s, b) {
     const headers = h.split('|').filter(c => c.trim()).map(c => c.trim());
     const rows = b.trim().split('\n').map(r => r.split('|').filter(c => c.trim()).map(c => c.trim()));
-    let t = '<table class="md-table"><thead><tr>' + headers.map(x => `<th>${x}</th>`).join('') + '</tr></thead><tbody>';
+    let t = '<div class="md-table-wrap"><table class="md-table"><thead><tr>' + headers.map(x => `<th>${x}</th>`).join('') + '</tr></thead><tbody>';
     rows.forEach(r => { t += '<tr>' + r.map(x => `<td>${x}</td>`).join('') + '</tr>'; });
-    t += '</tbody></table>';
+    t += '</tbody></table></div>';
     return '\n' + keep(t) + '\n';
   });
 
