@@ -326,7 +326,7 @@ ${p.dailyDetails.map(d => `| ${d.date} | ${d.invested.toFixed(2)} | ${d.resultTe
 - 整体盈亏结论
 - 核心盈利来源
 - 主要亏损原因
-- 下月优化方向;
+- 下月优化方向`;
 
   return prompt;
 }
