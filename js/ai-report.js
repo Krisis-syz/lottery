@@ -458,6 +458,9 @@ function simpleMarkdown(text) {
   // 保护 [chart:xxx] 原始标记
   text = text.replace(/\[chart:(\w+)\]/g, (m, t) => keep(`<div class="chart-placeholder" data-chart-id="chart-dyn-${t}"></div>`));
 
+  // Markdown 软换行：行尾两个空格 + 换行 → <br>
+  text = text.replace(/ {2,}\n/g, '<br>\n');
+
   // 表格
   text = text.replace(/(?:^|\n)(\|.+\|)\n(\|[-| :]+\|)\n((?:\|.+\|\n?)+)/g, function(_, h, s, b) {
     const headers = h.split('|').filter(c => c.trim()).map(c => c.trim());
@@ -515,7 +518,7 @@ function simpleMarkdown(text) {
       }).join('');
     }
 
-    // 普通行：加粗，包裹在 div 中确保换行
+    // 普通行：加粗，保留 <br> 标记，包裹在 div 中
     line = line.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     return `<div style="margin:4px 0;">${line}</div>`;
   }).join('\n');
@@ -526,9 +529,9 @@ function simpleMarkdown(text) {
   // 兜底：解析剩余的 ** 加粗
   text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
 
-  // 最终清理：块级标签后的 <br> 去掉
-  text = text.replace(/(<\/(?:h3|table|div|hr[^>]*|strong)>)<br>/g, '$1');
-  text = text.replace(/<br>(<(?:h3|table|div|hr))/g, '$1');
+  // 最终清理：块级标签前后的 <br> 去掉
+  text = text.replace(/<br>(<(?:div|h3|table|hr))/g, '$1');
+  text = text.replace(/(<\/(?:h3|table|div|hr|strong)>)<br>/g, '$1');
 
   return text;
 }
