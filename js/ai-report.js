@@ -241,11 +241,12 @@ function buildAIPrompt(data) {
 
 【重要】直接输出报告正文，禁止输出任何开场白、问候语、过渡语（如"好的"、"收到"、"以下是"等）。报告以"# 📊 本月投注总览分析"开头。
 
-【颜色规则】使用HTML span标签强调数字：
-- 盈利/正数用红色：<span style="color:#ef4444">数字</span>
-- 亏损/负数用绿色：<span style="color:#10b981">数字</span>
-- 示例：净利润：<span style="color:#ef4444">+3,923.76元</span>
-- 示例：亏损：<span style="color:#10b981">-500.00元</span>
+【颜色规则】使用HTML span标签强调数字，格式必须完全一致：
+- 盈利/正数用红色：<span style="color:#ef4444">+金额</span>（注意包含+号）
+- 亏损/负数用绿色：<span style="color:#10b981">-金额</span>
+- 正确示例：净利润：<span style="color:#ef4444">+3,923.76元</span>
+- 正确示例：亏损：<span style="color:#10b981">-500.00元</span>
+- 错误示例：净利润：<span style="color:#ef4444">3923.76</span>（缺少+号和单位）
 
 ## 数据说明
 请严格按照以下数据生成报告，不得编造或省略任何数据。
@@ -471,7 +472,8 @@ function simpleMarkdown(text) {
     // 列表（含 | 分隔符的渲染为横排指标）
     if (tr.startsWith('- ') || tr.startsWith('• ')) {
       const content = tr.slice(2);
-      if (content.includes('|')) {
+      if (content.includes('|') && !content.includes('\x00')) {
+        // 普通列表项，用 | 分隔
         const items = content.split('|').map(s => s.trim()).filter(Boolean);
         return '<div style="display:flex;flex-wrap:wrap;gap:6px 12px;margin:6px 0;padding:8px 0;">' +
           items.map(item => {
