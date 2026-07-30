@@ -1,5 +1,6 @@
 test-*.html
 export.html
+README.md
 
 # wrangler files
 .wrangler

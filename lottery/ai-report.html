@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 投注报告</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="icon.png" type="image/png">
+  <link rel="apple-touch-icon" href="icon.png">
+  <script src="js/supabase.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>AI 投注报告</h1>
+    </header>
+
+    <!-- 生成面板 -->
+    <section class="summary-main-card">
+      <div class="report-gen-row">
+        <div class="report-gen-left">
+          <span class="summary-label">选择月份</span>
+          <select id="reportMonth" class="report-month-select"></select>
+        </div>
+        <button class="btn btn-primary" id="generateBtn" onclick="generateReport()">生成报告</button>
+      </div>
+      <div class="report-status" id="reportStatus" style="display:none;"></div>
+    </section>
+
+    <!-- 报告内容 -->
+    <div id="reportArea" style="display:none;">
+      <section class="card report-content" id="reportContent"></section>
+    </div>
+
+    <!-- 历史报告列表 -->
+    <section class="card" style="margin-top:20px;">
+      <h3 style="margin-bottom:16px;">历史报告</h3>
+      <div id="historyList"></div>
+      <div class="empty-state" id="emptyHistory"><p>暂无历史报告</p></div>
+    </section>
+  </div>
+
+  <div class="bottom-nav">
+    <a href="index.html" class="nav-item"><span class="nav-icon">🏠</span>主页</a>
+    <a href="plans.html" class="nav-item"><span class="nav-icon">📋</span>计划</a>
+    <a href="history.html" class="nav-item"><span class="nav-icon">📊</span>历史</a>
+    <a href="profile.html" class="nav-item"><span class="nav-icon">👤</span>我的</a>
+  </div>
+
+  <style>
+    .report-gen-row { display:flex; align-items:flex-end; gap:16px; }
+    .report-gen-left { flex:1; }
+    .report-gen-left .summary-label { display:block; margin-bottom:8px; }
+    .report-month-select {
+      width:100%; padding:10px 14px; background:rgba(0,0,0,.3);
+      border:1px solid var(--glass-border); border-radius:var(--radius-sm);
+      font-family:'Outfit',sans-serif; font-size:14px; color:var(--text-primary);
+    }
+    .report-month-select:focus { outline:none; border-color:var(--gold); box-shadow:0 0 0 2px var(--gold-glow); }
+    .report-status {
+      margin-top:14px; padding:12px 16px; border-radius:var(--radius-sm);
+      font-size:13px; text-align:center;
+    }
+    .report-status.loading { background:rgba(245,158,11,.1); color:var(--gold); border:1px solid rgba(245,158,11,.3); }
+    .report-status.error { background:rgba(239,68,68,.1); color:var(--success); border:1px solid rgba(239,68,68,.3); }
+    .report-content { line-height:1.8; font-size:14px; color:var(--text-secondary); }
+    .report-content h3 { font-size:16px; font-weight:600; color:var(--text-primary); margin:20px 0 10px; }
+    .report-content strong { color:var(--text-primary); }
+    .report-content .md-table { width:100%; border-collapse:collapse; margin:12px 0; font-size:13px; }
+    .report-content .md-table th { background:rgba(0,0,0,.2); padding:8px 10px; text-align:left; font-weight:500; color:var(--text-muted); border-bottom:1px solid var(--glass-border); }
+    .report-content .md-table td { padding:8px 10px; border-bottom:1px solid var(--glass-border); font-family:'JetBrains Mono',monospace; font-size:12px; }
+    .history-item {
+      display:flex; justify-content:space-between; align-items:center;
+      padding:14px 16px; border-bottom:1px solid var(--glass-border); cursor:pointer;
+      transition: var(--transition);
+    }
+    .history-item:last-child { border-bottom:none; }
+    .history-item:hover { background:rgba(245,158,11,.05); }
+    .history-item-month { font-weight:500; color:var(--text-primary); }
+    .history-item-date { font-size:12px; color:var(--text-muted); }
+    .chart-placeholder { min-height:200px; }
+    .chart-inline {
+      margin: 16px 0;
+      padding: 12px;
+      background: rgba(0,0,0,0.2);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-sm);
+    }
+    .chart-inline canvas { width:100%; display:block; }
+    .report-content hr { border:none; border-top:1px solid var(--glass-border); margin:16px 0; }
+    @media(max-width:768px) {
+      .report-gen-row { flex-direction:column; align-items:stretch; }
+    }
+  </style>
+
+  <script src="js/api.js"></script>
+  <script src="js/ai-report.js"></script>
+</body>
+</html>
