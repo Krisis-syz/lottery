@@ -237,110 +237,109 @@ function buildAIPrompt(data) {
   const { yearMonth, totalInvested, totalReturned, totalProfit, roi, dailyProfits, planStats } = data;
   const [y, m] = yearMonth.split('-');
 
-  let prompt = `你是一位专业的体彩投注分析师。请根据以下真实数据生成${y}年${parseInt(m)}月的投注分析报告。
+  const dailyRows = dailyProfits.map(d => '| ' + d.date + ' | ' + d.dayProfit.toFixed(2) + ' | ' + d.cumulative.toFixed(2) + ' | ' + d.invested.toFixed(2) + ' | ' + d.returned.toFixed(2) + ' |').join('\n');
+  const planRows = planStats.map(p => '| ' + p.name + ' | ' + p.invested.toFixed(2) + ' | ' + p.profit.toFixed(2) + ' | ' + p.cumProfit.toFixed(2) + ' | ' + (p.momChange !== null ? p.momChange.toFixed(1) : 'N/A') + ' | ' + p.maxLoseStreak + ' | ' + p.recordCount + ' |').join('\n');
+  const planDetails = planStats.map(p => {
+    let detail = '**' + p.name + '**\n| 日期 | 投入 | 结果 | 利润 |\n|------|------|------|------|\n';
+    detail += p.dailyDetails.map(d => '| ' + d.date + ' | ' + d.invested.toFixed(2) + ' | ' + d.resultText + ' | ' + d.profit.toFixed(2) + ' |').join('\n');
+    return detail;
+  }).join('\n\n');
 
-【重要】直接输出报告正文，禁止输出任何开场白、问候语、过渡语（如"好的"、"收到"、"以下是"等）。报告以"# 📊 本月投注总览分析"开头。
-
-【颜色规则】使用HTML span标签强调数字，格式必须完全一致：
-- 盈利/正数用红色：<span style="color:#ef4444">+金额</span>（注意包含+号）
-- 亏损/负数用绿色：<span style="color:#10b981">-金额</span>
-- 正确示例：净利润：<span style="color:#ef4444">+3,923.76元</span>
-- 正确示例：亏损：<span style="color:#10b981">-500.00元</span>
-- 错误示例：净利润：<span style="color:#ef4444">3923.76</span>（缺少+号和单位）
-
-## 数据说明
-请严格按照以下数据生成报告，不得编造或省略任何数据。
-
----
-
-## 一、本月投注总览
-
-【核心指标】必须按以下格式，每个指标独占一行，用 | 分隔成两行：
-- 总投入：${totalInvested.toFixed(2)} 元 | 总回收：${totalReturned.toFixed(2)} 元
-- 净利润：${totalProfit.toFixed(2)} 元 | 收益率：${roi.toFixed(2)}%
-- 投注天数：${data.activeDays} 天 | 投注笔数：${data.totalRecords} 笔
-
-### 每日数据
-
-| 日期 | 单日利润 | 累计利润 | 投入 | 回收 |
-|------|----------|----------|------|------|
-${dailyProfits.map(d => `| ${d.date} | ${d.dayProfit.toFixed(2)} | ${d.cumulative.toFixed(2)} | ${d.invested.toFixed(2)} | ${d.returned.toFixed(2)} |`).join('\n')}
-
----
-
-## 二、分计划分析
-
-| 计划名称 | 本月投入 | 本月利润 | 累计总利润 | 环比(%) | 最大连黑 | 投注笔数 |
-|----------|----------|----------|------------|---------|----------|----------|
-${planStats.map(p => `| ${p.name} | ${p.invested.toFixed(2)} | ${p.profit.toFixed(2)} | ${p.cumProfit.toFixed(2)} | ${p.momChange !== null ? p.momChange.toFixed(1) : 'N/A'} | ${p.maxLoseStreak} | ${p.recordCount} |`).join('\n')}
-
-### 各计划每日明细
-${planStats.map(p => `
-**${p.name}**
-| 日期 | 投入 | 结果 | 利润 |
-|------|------|------|------|
-${p.dailyDetails.map(d => `| ${d.date} | ${d.invested.toFixed(2)} | ${d.resultText} | ${d.profit.toFixed(2)} |`).join('\n')}
-`).join('\n')}
-
----
-
-## 输出格式要求
-
-1. 全文使用标准Markdown，分四大章节，每章节开头用对应emoji引导
-2. 全部金额统一保留2位小数
-3. 重点数字使用颜色强调：
-   - 盈利/正数用红色：<span style="color:#ef4444">数字</span>
-   - 亏损/负数用绿色：<span style="color:#10b981">数字</span>
-   - 例如：净利润：<span style="color:#ef4444">+3,923.76元</span>，收益率：<span style="color:#ef4444">30.30%</span>
-   - 例如：亏损：<span style="color:#10b981">-500.00元</span>
-4. 禁止省略任意模块数据，不遗漏计划，不编造数据
-5. 排版简洁商务风，无多余花哨表情
-
-【换行规则】每个要点必须独占一行！
-- 例如：核心盈利来源：梨子半全场（+1,632.10元）
-- 例如：主要亏损原因：霸道计划亏损（-17.16元）
-- 禁止将多个要点合并到同一行！
-
-【表格规则】分计划分析必须包含以下所有列，缺一不可：
-| 计划名称 | 本月投入 | 本月利润 | 累计总利润 | 环比(%) | 最大连黑 | 投注笔数 |
-
-### 图表标记
-在报告中适当位置插入以下标记，系统会自动渲染图表：
-- 在第一章节末尾插入 [chart:trend] 渲染本月累计利润趋势图
-- 在第一章节末尾插入 [chart:calendar] 渲染本月利润日历图
-- 在第二章节表格后插入 [chart:treemap] 渲染计划利润横向柱状图
-
-### 章节结构
-
-**x年x月投注总览分析**（📊）//这里的x要替换为数字
-- 核心指标汇总（以表格形式给出）
-- 分析盈亏原因、资金效率
--  [chart:trend]
--  [chart:calendar]
-
-**分计划投注分析**（📋）
-- 按本月利润降序排列的表格（包括：|计划名称 | 本月投入 | 本月利润 | 累计总利润 | 环比(%) | 最大连黑 | ）
--  [chart:treemap]
-- 数据深度分析：盈利贡献、亏损拖累、环比变化、连黑稳定性等
-
-**风险识别**（⚠️）
-- 风险点：不稳定计划、不理性行为、高风险日期
-- 正确行为：好的策略、稳定计划
-- 可行性总结：是否可持续、是否需调整
-
-**本月投注总结**（📝）
-- 整体盈亏结论（一句话总结盈亏和收益率）
-- 核心盈利来源（列出盈利最多的计划，每个计划一行）
-- 主要亏损原因（列出亏损项目，每个一行）
-- 下月优化方向（分条列出，每条换行）
-
-【强制换行规则】
-1. 每个要点必须以 `- ` 开头，独占一行
-2. 禁止将多个要点合并到同一行！
-3. 例如：
-- 整体盈亏：本月净利润+3,923.76元，收益率30.30%
-- 核心盈利来源：梨子半全场（+1,632.10元）
-- 主要亏损原因：霸道计划（-17.16元）`;
+  var prompt = [
+    '你是一位专业的体彩投注分析师。请根据以下真实数据生成' + y + '年' + parseInt(m) + '月的投注分析报告。',
+    '',
+    '【重要】直接输出报告正文，禁止输出任何开场白、问候语、过渡语（如"好的"、"收到"、"以下是"等）。报告以"# 📊 本月投注总览分析"开头。',
+    '',
+    '【颜色规则】使用HTML span标签强调数字，格式必须完全一致：',
+    '- 盈利/正数用红色：<span style="color:#ef4444">+金额</span>（注意包含+号）',
+    '- 亏损/负数用绿色：<span style="color:#10b981">-金额</span>',
+    '- 正确示例：净利润：<span style="color:#ef4444">+3,923.76元</span>',
+    '- 正确示例：亏损：<span style="color:#10b981">-500.00元</span>',
+    '- 错误示例：净利润：<span style="color:#ef4444">3923.76</span>（缺少+号和单位）',
+    '',
+    '## 数据说明',
+    '请严格按照以下数据生成报告，不得编造或省略任何数据。',
+    '',
+    '---',
+    '',
+    '## 一、本月投注总览',
+    '',
+    '【核心指标】必须按以下格式，每个指标独占一行，用 | 分隔成两行：',
+    '- 总投入：' + totalInvested.toFixed(2) + ' 元 | 总回收：' + totalReturned.toFixed(2) + ' 元',
+    '- 净利润：' + totalProfit.toFixed(2) + ' 元 | 收益率：' + roi.toFixed(2) + '%',
+    '- 投注天数：' + data.activeDays + ' 天 | 投注笔数：' + data.totalRecords + ' 笔',
+    '',
+    '### 每日数据',
+    '',
+    '| 日期 | 单日利润 | 累计利润 | 投入 | 回收 |',
+    '|------|----------|----------|------|------|',
+    dailyRows,
+    '',
+    '---',
+    '',
+    '## 二、分计划分析',
+    '',
+    '| 计划名称 | 本月投入 | 本月利润 | 累计总利润 | 环比(%) | 最大连黑 | 投注笔数 |',
+    '|----------|----------|----------|------------|---------|----------|----------|',
+    planRows,
+    '',
+    '### 各计划每日明细',
+    planDetails,
+    '',
+    '---',
+    '',
+    '## 输出格式要求',
+    '',
+    '1. 全文使用标准Markdown，分四大章节，每章节开头用对应emoji引导',
+    '2. 全部金额统一保留2位小数',
+    '3. 重点数字使用颜色强调：',
+    '   - 盈利/正数用红色：<span style="color:#ef4444">数字</span>',
+    '   - 亏损/负数用绿色：<span style="color:#10b981">数字</span>',
+    '   - 例如：净利润：<span style="color:#ef4444">+3,923.76元</span>，收益率：<span style="color:#ef4444">30.30%</span>',
+    '   - 例如：亏损：<span style="color:#10b981">-500.00元</span>',
+    '4. 禁止省略任意模块数据，不遗漏计划，不编造数据',
+    '5. 排版简洁商务风，无多余花哨表情',
+    '',
+    '',
+    '【表格规则】分计划分析必须包含以下所有列，缺一不可：',
+    '| 计划名称 | 本月投入 | 本月利润 | 累计总利润 | 环比(%) | 最大连黑 | 投注笔数 |',
+    '',
+    '### 图表标记',
+    '在报告中适当位置插入以下标记，系统会自动渲染图表：',
+    '- 在第一章节末尾插入 [chart:trend] 渲染本月累计利润趋势图',
+    '- 在第一章节末尾插入 [chart:calendar] 渲染本月利润日历图',
+    '- 在第二章节表格后插入 [chart:treemap] 渲染计划利润横向柱状图',
+    '',
+    '### 章节结构',
+    '',
+    '**x年x月投注总览分析**（📊）//这里的x要替换为数字',
+    '- 核心指标汇总（以表格形式给出，只展示核心指标，不要每日具体数据）',
+    '- 分析盈亏原因、资金效率',
+    '-  [chart:trend]',
+    '-  [chart:calendar]',
+    '',
+    '**分计划投注分析**（📋）',
+    '- 按本月利润降序排列的表格（包括：|计划名称 | 本月投入 | 本月利润 | 累计总利润 | 环比(%) | 最大连黑 | ）',
+    '-  [chart:treemap]',
+    '- 数据深度分析：可从盈利贡献、亏损拖累、环比变化、连黑稳定性等方向分析，每个方向之间记得换行',
+    '',
+    '**风险识别**（⚠️）',
+    '- 风险点：不稳定计划、不理性行为、高风险日期',
+    '- 正确行为：好的策略、稳定计划',
+    '- 可行性总结：是否可持续、是否需调整',
+    '',
+    '**本月投注总结**（📝）',
+    '- 整体盈亏结论（简要总结盈亏和收益率）',
+    '- 核心盈利来源',
+    '- 主要亏损原因',
+    '- 下月优化方向',
+    '',
+    '【核心指标汇总格式】必须按以下格式输出，每个指标占一行，用 | 分隔：',
+    '- 总投入：xxx 元 | 总回收：xxx 元',
+    '- 净利润：xxx 元 | 收益率：xxx%',
+    '- 投注天数：xx 天 | 投注笔数：xx 笔',
+    '禁止将多个指标合并到同一行，禁止使用表格格式。'
+  ].join('\n');
 
   return prompt;
 }
@@ -364,15 +363,33 @@ async function generateReport() {
 
     // 构建 prompt
     const prompt = buildAIPrompt(reportData);
+    if (typeof prompt !== 'string' || !prompt) {
+      throw new Error('buildAIPrompt 返回异常');
+    }
 
-    // 调用 AI
+    // 调用 AI（用 fetch 直接调用，便于获取错误详情）
     status.textContent = 'AI 正在分析数据，预计需要 30-60 秒...';
     const sb = getSupabase();
-    const { data: result, error } = await sb.functions.invoke('generate-report', { body: { prompt } });
-    if (error) {
-      // 尝试获取详细错误信息
-      const detail = result?.error || error.message || JSON.stringify(error);
-      throw new Error(detail);
+    const session = await sb.auth.getSession();
+    const token = session?.data?.session?.access_token;
+    const funcUrl = `${sb.supabaseUrl}/functions/v1/generate-report`;
+
+    // 清理 prompt 中的特殊字符，防止 JSON 解析失败
+    const cleanPrompt = prompt.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '');
+
+    const resp = await fetch(funcUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+        'apikey': sb.supabaseKey,
+      },
+      body: JSON.stringify({ prompt: cleanPrompt }),
+    });
+
+    const result = await resp.json();
+    if (!resp.ok) {
+      throw new Error(result.error || `HTTP ${resp.status}`);
     }
 
     const reportText = typeof result === 'string' ? result : (result.reportText || result.report || result.content || result.text || JSON.stringify(result));
@@ -452,41 +469,50 @@ function renderReport(text) {
 function simpleMarkdown(text) {
   if (!text) return '';
 
-  // 占位符保护：先提取图表标记和 HTML 块，用 \x00 占位
-  const stash = [];
-  const keep = (s) => { stash.push(s); return `\x00${stash.length - 1}\x00`; };
-
-  // 保护已有的 HTML div（图表占位符等）
-  text = text.replace(/<div[^>]*>.*?<\/div>/gs, m => keep(m));
-  // 保护带颜色的 span 标签
-  text = text.replace(/<span style="color:[^"]*">.*?<\/span>/g, m => keep(m));
-  // 保护 [chart:xxx] 原始标记
-  text = text.replace(/\[chart:(\w+)\]/g, (m, t) => keep(`<div class="chart-placeholder" data-chart-id="chart-dyn-${t}"></div>`));
+  // 按 | 分割，但跳过 HTML 标签内的 |
+  function splitByPipe(str) {
+    const result = [];
+    let current = '';
+    let inTag = 0; // 嵌套深度
+    for (let i = 0; i < str.length; i++) {
+      const ch = str[i];
+      if (ch === '<') { inTag++; current += ch; }
+      else if (ch === '>') { inTag = Math.max(0, inTag - 1); current += ch; }
+      else if (ch === '|' && inTag === 0) {
+        result.push(current);
+        current = '';
+      } else {
+        current += ch;
+      }
+    }
+    if (current) result.push(current);
+    return result;
+  }
 
   // Markdown 软换行：行尾两个空格 + 换行 → <br>
   text = text.replace(/ {2,}\n/g, '<br>\n');
 
   // 表格
   text = text.replace(/(?:^|\n)(\|.+\|)\n(\|[-| :]+\|)\n((?:\|.+\|\n?)+)/g, function(_, h, s, b) {
-    const headers = h.split('|').filter(c => c.trim()).map(c => c.trim());
-    const rows = b.trim().split('\n').map(r => r.split('|').filter(c => c.trim()).map(c => c.trim()));
+    const headers = splitByPipe(h).filter(c => c.trim()).map(c => c.trim());
+    const rows = b.trim().split('\n').map(r => splitByPipe(r).filter(c => c.trim()).map(c => c.trim()));
     let t = '<div class="md-table-wrap"><table class="md-table"><thead><tr>' + headers.map(x => `<th>${x}</th>`).join('') + '</tr></thead><tbody>';
     rows.forEach(r => { t += '<tr>' + r.map(x => `<td>${x}</td>`).join('') + '</tr>'; });
     t += '</tbody></table></div>';
-    return '\n' + keep(t) + '\n';
+    return '\n' + t + '\n';
   });
 
   // 逐行处理
   text = text.split('\n').map(line => {
     const tr = line.trim();
-    // 跳过空行和已处理的 HTML
     if (!tr) return '';
-    if (tr.startsWith('\x00')) return tr;
+    // 跳过 HTML 块（表格渲染结果等）
+    if (tr.startsWith('<div') || tr.startsWith('<table')) return tr;
 
     // 水平线
-    if (/^---+$/.test(tr)) return keep('<hr style="border:none;border-top:1px solid var(--glass-border);margin:20px 0;">');
+    if (/^---+$/.test(tr)) return '<hr style="border:none;border-top:1px solid var(--glass-border);margin:20px 0;">';
 
-    // 标题（注意顺序：先 ### 再 ## 再 #）
+    // 标题
     if (tr.startsWith('### ')) return `<h3>${tr.slice(4)}</h3>`;
     if (tr.startsWith('## ')) return `<h3>${tr.slice(3)}</h3>`;
     if (tr.startsWith('# ')) return `<h3>${tr.slice(2)}</h3>`;
@@ -494,8 +520,8 @@ function simpleMarkdown(text) {
     // 列表（含 | 分隔符的渲染为横排指标）
     if (tr.startsWith('- ') || tr.startsWith('• ')) {
       const content = tr.slice(2);
-      if (content.includes('|') && !content.includes('\x00')) {
-        const items = content.split('|').map(s => s.trim()).filter(Boolean);
+      if (content.includes('|')) {
+        const items = splitByPipe(content).map(s => s.trim()).filter(Boolean);
         return '<div style="display:flex;flex-wrap:wrap;gap:6px 12px;margin:6px 0;padding:8px 0;">' +
           items.map(item => {
             let s = item.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
@@ -506,8 +532,8 @@ function simpleMarkdown(text) {
     }
 
     // 不以 - 开头但含 | 分隔符的行（核心指标等）→ 横排指标
-    if (tr.includes('|') && !tr.startsWith('#') && !tr.startsWith('\x00') && tr.split('|').length >= 3) {
-      const items = tr.split('|').map(s => s.trim()).filter(Boolean);
+    if (tr.includes('|') && !tr.startsWith('#') && !tr.startsWith('<') && splitByPipe(tr).length >= 3) {
+      const items = splitByPipe(tr).map(s => s.trim()).filter(Boolean);
       return '<div style="display:flex;flex-wrap:wrap;gap:6px 12px;margin:6px 0;padding:8px 0;">' +
         items.map(item => {
           let s = item.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
@@ -515,12 +541,12 @@ function simpleMarkdown(text) {
         }).join('') + '</div>';
     }
 
-    // 编号列表 1. 2. 3.
+    // 编号列表
     if (/^\d+\.\s/.test(tr)) {
       return `<div style="padding-left:12px;margin:3px 0;">${tr.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')}</div>`;
     }
 
-    // 标题后紧跟编号列表：拆为标题 + 列表项
+    // 标题后紧跟编号列表
     if (/\s\d+\.\s/.test(tr) && !tr.startsWith('#')) {
       const parts = tr.split(/(?=\s\d+\.\s)/);
       return parts.map(p => {
@@ -532,13 +558,10 @@ function simpleMarkdown(text) {
       }).join('');
     }
 
-    // 普通行：加粗，保留 <br> 标记，包裹在 div 中
+    // 普通行
     line = line.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     return `<div style="margin:4px 0;">${line}</div>`;
   }).join('\n');
-
-  // 恢复占位符
-  text = text.replace(/\x00(\d+)\x00/g, (_, i) => stash[parseInt(i)]);
 
   // 兜底：解析剩余的 ** 加粗
   text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
