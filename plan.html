@@ -78,11 +78,13 @@
     <section class="chart-container">
       <div class="chart-header">
         <h3>收益趋势</h3>
-        <div class="chart-tabs">
-          <button class="chart-tab active" onclick="switchPlanChartView('day')">日</button>
-          <button class="chart-tab" onclick="switchPlanChartView('month')">月</button>
-        </div>
+        <select class="chart-group-select" id="planChartGroupSelect" onchange="switchPlanChartGroup(this.value)">
+          <option value="day">按日</option>
+          <option value="week">按周</option>
+          <option value="month">按月</option>
+        </select>
       </div>
+      <div class="chart-range-bar" id="planChartRangeBar"></div>
       <div class="chart-wrapper">
         <canvas id="planProfitChart"></canvas>
       </div>
@@ -156,10 +158,43 @@
     </div>
   </div>
 
-  <!-- 长按上下文菜单 -->
-  <div class="context-menu" id="contextMenu">
-    <button class="context-menu-item" id="ctxEditAmount">修改金额</button>
-    <button class="context-menu-item" id="ctxFillResult">填写结果</button>
+  <!-- 记录操作弹窗 -->
+  <div class="modal" id="recordActionModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>操作</h3>
+        <button class="btn-close" onclick="hideRecordActionModal()">&times;</button>
+      </div>
+      <div class="record-action-list">
+        <button class="record-action-btn" onclick="onActionEditAmount()">
+          <span class="record-action-icon">✏️</span>
+          <span>修改金额</span>
+        </button>
+        <button class="record-action-btn" onclick="onActionFillResult()">
+          <span class="record-action-icon">📝</span>
+          <span>填写结果</span>
+        </button>
+        <button class="record-action-btn record-action-danger" onclick="onActionDelete()">
+          <span class="record-action-icon">🗑️</span>
+          <span>删除记录</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 删除确认弹窗 -->
+  <div class="modal" id="deleteConfirmModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>确认删除</h3>
+        <button class="btn-close" onclick="hideDeleteConfirm()">&times;</button>
+      </div>
+      <p style="color: var(--text-secondary); margin-bottom: 20px;">确定要删除这条记录吗？此操作不可撤销。</p>
+      <div class="form-actions">
+        <button class="btn" onclick="hideDeleteConfirm()">取消</button>
+        <button class="btn btn-danger" onclick="confirmDeleteRecord()">删除</button>
+      </div>
+    </div>
   </div>
 
   <div class="bottom-nav">

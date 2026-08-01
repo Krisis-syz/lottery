@@ -371,7 +371,7 @@ async function generateReport() {
     status.textContent = 'AI 正在分析数据，预计需要 30-60 秒...';
     const sb = getSupabase();
     const session = await sb.auth.getSession();
-    const token = session?.data?.session?.access_token;
+    const token = session && session.data && session.data.session && session.data.session.access_token;
     const funcUrl = `${sb.supabaseUrl}/functions/v1/generate-report`;
 
     // 清理 prompt 中的特殊字符，防止 JSON 解析失败

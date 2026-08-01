@@ -27,12 +27,13 @@
     <section class="chart-container">
       <div class="chart-header">
         <h3>总净收益趋势</h3>
-        <div class="chart-tabs">
-          <button class="chart-tab active" onclick="switchChartView('day')">日</button>
-          <button class="chart-tab" onclick="switchChartView('month')">月</button>
-          <button class="chart-tab" onclick="switchChartView('year')">年</button>
-        </div>
+        <select class="chart-group-select" id="chartGroupSelect" onchange="switchChartGroup(this.value)">
+          <option value="day">按日</option>
+          <option value="week">按周</option>
+          <option value="month">按月</option>
+        </select>
       </div>
+      <div class="chart-range-bar" id="chartRangeBar"></div>
       <div class="chart-wrapper">
         <canvas id="profitChart"></canvas>
       </div>
@@ -61,20 +62,10 @@
       <div class="section-title">
         <h3>收益明细</h3>
         <span class="section-date" id="recordsDate"></span>
-        <span class="sort-toggle" id="sortProfitBtn" onclick="toggleSortByProfit()">
-          盈亏排序<span class="sort-arrows"><span class="sort-arrow" id="sortArrowAsc">▲</span><span class="sort-arrow" id="sortArrowDesc">▼</span></span>
-        </span>
       </div>
       <div class="table-container">
         <table>
-          <thead>
-            <tr>
-              <th>计划</th>
-              <th>投注</th>
-              <th>结果</th>
-              <th>净利润</th>
-            </tr>
-          </thead>
+          <thead id="historyTableHead"></thead>
           <tbody id="historyTable">
           </tbody>
         </table>

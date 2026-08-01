@@ -312,6 +312,13 @@ const api = {
     return updateData;
   },
 
+  // 删除投注记录
+  deleteRecord: async (recordId) => {
+    const sb = getSupabase();
+    const { error } = await sb.from('records').delete().eq('id', recordId);
+    if (error) throw error;
+  },
+
   // 获取汇总数据
   getSummary: async () => {
     const sb = getSupabase();
@@ -427,8 +434,8 @@ const api = {
     return {
       dailyProfits: cumulativeHistory,
       allRecords: (records || []).map(r => ({
-        planName: planMap[r.plan_id]?.name || '未知计划',
-        planType: planMap[r.plan_id]?.type,
+        planName: (planMap[r.plan_id] && planMap[r.plan_id].name) || '未知计划',
+        planType: planMap[r.plan_id] ? planMap[r.plan_id].type : undefined,
         id: r.id,
         date: r.date,
         betAmount: r.bet_amount,
@@ -490,7 +497,7 @@ const fundApi = {
     return (data || []).map(r => ({
       id: r.id,
       sourceId: r.source_id,
-      sourceName: r.fund_sources?.name || '未知',
+      sourceName: (r.fund_sources && r.fund_sources.name) || '未知',
       amount: r.amount
     }));
   },
@@ -525,7 +532,7 @@ const fundApi = {
       yearMonth: r.year_month,
       amount: r.amount,
       sourceId: r.source_id,
-      sourceName: r.fund_sources?.name || '未知'
+      sourceName: (r.fund_sources && r.fund_sources.name) || '未知'
     }));
   },
 

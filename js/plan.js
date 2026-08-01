@@ -1,11 +1,19 @@
 let currentPlan = null;
 let selectedResult = null;
 let planProfitChart = null;
-let planChartView = 'day';
+let planGroupBy = 'day';
+let planRange = '1m';
 let planCalendarView = 'day';
 let planCalendarDate = new Date();
-let longPressTimer = null;
-let longPressRecordId = null;
+let actionRecordId = null;
+
+// 每种分组下的时间范围选项及默认值
+const PLAN_RANGE_OPTIONS = {
+  day:   [{ label: '近1月', value: '1m' }, { label: '近3月', value: '3m' }, { label: '近6月', value: '6m' }, { label: '近1年', value: '1y' }, { label: '全部', value: 'all' }],
+  week:  [{ label: '近3月', value: '3m' }, { label: '近6月', value: '6m' }, { label: '近1年', value: '1y' }, { label: '近2年', value: '2y' }, { label: '全部', value: 'all' }],
+  month: [{ label: '近1年', value: '1y' }, { label: '近2年', value: '2y' }, { label: '近3年', value: '3y' }, { label: '近5年', value: '5y' }, { label: '全部', value: 'all' }]
+};
+const PLAN_RANGE_DEFAULTS = { day: '1m', week: '3m', month: '1y' };
 
 function getPlanId() {
   return new URLSearchParams(window.location.search).get('id');
@@ -21,14 +29,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!planId) return;
   try { await loadPlan(planId); } catch (e) { console.error('加载出错:', e); }
   document.getElementById('recordDate').valueAsDate = new Date();
-  initContextMenu();
 });
 
 async function loadPlan(planId) {
   await waitForSupabase();
   currentPlan = await api.getPlan(planId);
+  console.log('[plan] loadPlan records:', currentPlan.records ? currentPlan.records.length : 0);
   renderPlanInfo();
   renderRecords();
+  renderPlanRangeButtons();
   renderPlanProfitChart();
   renderPlanCalendar();
 }
@@ -107,7 +116,7 @@ function renderRecords() {
     mr.forEach(record => {
       const hid = isCur ? '' : 'hidden';
       const mmdd = record.date.substring(5);
-      html += `<tr class="month-row plan-group-${month} ${hid}" data-record-id="${record.id}" data-bet-amount="${record.betAmount}"><td class="td-date">${mmdd}</td><td class="td-num">${record.betAmount.toFixed(0)}</td><td class="${record.result === 'win' ? 'win' : record.result === 'lose' ? 'lose' : ''}">${record.result === 'win' ? '中' : record.result === 'lose' ? '未中' : '-'}</td><td class="td-num">${record.winAmount > 0 ? record.winAmount.toFixed(0) : '-'}</td><td class="td-num ${record.profit > 0 ? 'win' : record.profit < 0 ? 'lose' : ''}">${record.result ? record.profit.toFixed(0) : '-'}</td></tr>`;
+      html += `<tr class="month-row plan-group-${month} ${hid}" data-record-id="${record.id}" data-bet-amount="${record.betAmount}" onclick="showRecordActionModal('${record.id}')"><td class="td-date">${mmdd}</td><td class="td-num">${record.betAmount.toFixed(0)}</td><td class="${record.result === 'win' ? 'win' : record.result === 'lose' ? 'lose' : ''}">${record.result === 'win' ? '中' : record.result === 'lose' ? '未中' : '-'}</td><td class="td-num">${record.winAmount > 0 ? record.winAmount.toFixed(0) : '-'}</td><td class="td-num ${record.profit > 0 ? 'win' : record.profit < 0 ? 'lose' : ''}">${record.result ? record.profit.toFixed(0) : '-'}</td></tr>`;
     });
   });
   tbody.innerHTML = html;
@@ -187,6 +196,88 @@ function getPlanDailyProfits() {
   return Object.keys(dm).sort().filter(d => dm[d].settled).map(d => { cum += dm[d].profit; return { date: d, profit: dm[d].profit, cumulative: cum }; });
 }
 
+// 按周聚合
+function planAggregateByWeek(dailyProfits) {
+  const weekMap = {};
+  dailyProfits.forEach(item => {
+    const d = new Date(item.date);
+    const dayOfWeek = d.getDay();
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const monday = new Date(d);
+    monday.setDate(d.getDate() + mondayOffset);
+    const weekKey = `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, '0')}-${String(monday.getDate()).padStart(2, '0')}`;
+    if (!weekMap[weekKey]) weekMap[weekKey] = { date: weekKey, cumulative: 0, profit: 0 };
+    weekMap[weekKey].cumulative = item.cumulative;
+    weekMap[weekKey].profit += item.profit;
+  });
+  return Object.values(weekMap).sort((a, b) => a.date.localeCompare(b.date));
+}
+
+// 按月聚合
+function planAggregateByMonth(dailyProfits) {
+  const monthMap = {};
+  dailyProfits.forEach(item => {
+    const monthKey = item.date.substring(0, 7);
+    if (!monthMap[monthKey]) monthMap[monthKey] = { date: monthKey, cumulative: 0, profit: 0 };
+    monthMap[monthKey].cumulative = item.cumulative;
+    monthMap[monthKey].profit += item.profit;
+  });
+  return Object.values(monthMap).sort((a, b) => a.date.localeCompare(b.date));
+}
+
+// 根据范围过滤日期列表
+function planFilterByRange(dates) {
+  if (planRange === 'all' || dates.length === 0) return dates;
+  const lastDate = dates[dates.length - 1];
+  const endDate = new Date(lastDate);
+  let monthsBack;
+  switch (planRange) {
+    case '1m': monthsBack = 1; break;
+    case '3m': monthsBack = 3; break;
+    case '6m': monthsBack = 6; break;
+    case '1y': monthsBack = 12; break;
+    case '2y': monthsBack = 24; break;
+    case '3y': monthsBack = 36; break;
+    case '5y': monthsBack = 60; break;
+    default: return dates;
+  }
+  const startDate = new Date(endDate);
+  startDate.setMonth(startDate.getMonth() - monthsBack);
+  const startStr = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')}`;
+  return dates.filter(d => d >= startStr);
+}
+
+// 切换分组
+function switchPlanChartGroup(group) {
+  console.log('[plan] switchPlanChartGroup:', group);
+  planGroupBy = group;
+  planRange = PLAN_RANGE_DEFAULTS[group];
+  renderPlanRangeButtons();
+  renderPlanProfitChart();
+}
+
+// 切换时间范围
+function switchPlanChartRange(range) {
+  planRange = range;
+  document.querySelectorAll('#planChartRangeBar .chart-range-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.range === range);
+  });
+  renderPlanProfitChart();
+}
+
+// 渲染时间范围按钮
+function renderPlanRangeButtons() {
+  const bar = document.getElementById('planChartRangeBar');
+  if (!bar) { console.error('[plan] planChartRangeBar not found'); return; }
+  const options = PLAN_RANGE_OPTIONS[planGroupBy];
+  if (!options) { console.error('[plan] no options for', planGroupBy); return; }
+  const html = options.map(opt =>
+    `<button class="chart-range-btn${opt.value === planRange ? ' active' : ''}" data-range="${opt.value}" onclick="switchPlanChartRange('${opt.value}')">${opt.label}</button>`
+  ).join('');
+  bar.innerHTML = html;
+  console.log('[plan] renderPlanRangeButtons:', planGroupBy, '→', bar.children.length, 'buttons');
+}
+
 function renderPlanProfitChart() {
   const ctx = document.getElementById('planProfitChart');
   if (!ctx) return;
@@ -194,35 +285,28 @@ function renderPlanProfitChart() {
   const dp = getPlanDailyProfits();
   if (dp.length === 0) return;
 
-  let labels = [], data = [];
-  if (planChartView === 'day') {
-    labels = dp.map(i => i.date); data = dp.map(i => i.cumulative);
+  let points = [];
+  if (planGroupBy === 'day') {
+    points = dp.map(i => ({ label: i.date, value: i.cumulative }));
+  } else if (planGroupBy === 'week') {
+    points = planAggregateByWeek(dp).map(w => ({ label: w.date, value: w.cumulative }));
   } else {
-    const m = {}; dp.forEach(i => { m[i.date.substring(0, 7)] = i.cumulative; });
-    labels = Object.keys(m).sort(); data = labels.map(k => m[k]);
+    points = planAggregateByMonth(dp).map(m => ({ label: m.date, value: m.cumulative }));
   }
+
+  const allLabels = points.map(p => p.label);
+  const filteredLabels = planFilterByRange(allLabels);
+  const filteredPoints = points.filter(p => filteredLabels.includes(p.label));
+  if (filteredPoints.length === 0) return;
+
+  const labels = filteredPoints.map(p => p.label);
+  const data = filteredPoints.map(p => p.value);
 
   planProfitChart = new Chart(ctx.getContext('2d'), {
     type: 'line',
     data: { labels, datasets: [{ data, borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,.1)', fill: true, tension: .3, pointRadius: 4, pointBackgroundColor: '#f59e0b' }] },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.parsed.y.toFixed(2) } } }, scales: { x: { grid: { color: 'rgba(255,255,255,.05)' }, ticks: { maxTicksLimit: 3, color: '#6b7280' } }, y: { grid: { color: 'rgba(255,255,255,.05)' }, ticks: { callback: v => v, color: '#6b7280' } } } }
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.parsed.y.toFixed(2) } } }, scales: { x: { grid: { color: 'rgba(255,255,255,.05)' }, ticks: { maxTicksLimit: 6, color: '#6b7280', font: { size: 11 } } }, y: { grid: { color: 'rgba(255,255,255,.05)' }, ticks: { callback: v => v, color: '#6b7280', font: { size: 11 } } } } }
   });
-}
-
-function switchPlanChartView(view) {
-  planChartView = view;
-  // 只更新趋势图的tab（找到canvas的父级chart-container）
-  const canvas = document.getElementById('planProfitChart');
-  if (canvas) {
-    const container = canvas.closest('.chart-container');
-    if (container) {
-      container.querySelectorAll('.chart-tab').forEach(tab => {
-        tab.classList.remove('active');
-        if (tab.textContent === (view === 'day' ? '日' : '月')) tab.classList.add('active');
-      });
-    }
-  }
-  renderPlanProfitChart();
 }
 
 // ========== 日历 ==========
@@ -330,74 +414,58 @@ function updatePlanCalendarTabs(activeText) {
   }
 }
 
-// ========== 长按上下文菜单 ==========
+// ========== 记录操作弹窗 ==========
 
-function initContextMenu() {
-  const menu = document.getElementById('contextMenu');
-  const table = document.getElementById('recordsTable');
-
-  // 长按触发
-  table.addEventListener('touchstart', (e) => {
-    const row = e.target.closest('tr[data-record-id]');
-    if (!row) return;
-    longPressRecordId = row.dataset.recordId;
-    longPressTimer = setTimeout(() => {
-      e.preventDefault();
-      const touch = e.touches[0];
-      showContextMenu(touch.clientX, touch.clientY, row);
-    }, 500);
-  });
-
-  table.addEventListener('touchend', () => clearTimeout(longPressTimer));
-  table.addEventListener('touchmove', () => clearTimeout(longPressTimer));
-
-  // 右键触发（桌面端）
-  table.addEventListener('contextmenu', (e) => {
-    const row = e.target.closest('tr[data-record-id]');
-    if (!row) return;
-    e.preventDefault();
-    longPressRecordId = row.dataset.recordId;
-    showContextMenu(e.clientX, e.clientY, row);
-  });
-
-  // 点击其他地方关闭
-  document.addEventListener('click', () => hideContextMenu());
-  document.addEventListener('touchstart', (e) => {
-    if (!e.target.closest('.context-menu')) hideContextMenu();
-  });
-
-  // 菜单操作
-  document.getElementById('ctxEditAmount').addEventListener('click', () => {
-    if (!longPressRecordId) return;
-    const row = document.querySelector(`tr[data-record-id="${longPressRecordId}"]`);
-    showEditAmountModal(longPressRecordId, parseFloat(row.dataset.betAmount));
-    hideContextMenu();
-  });
-
-  document.getElementById('ctxFillResult').addEventListener('click', () => {
-    if (!longPressRecordId) return;
-    showResultModal(longPressRecordId);
-    hideContextMenu();
-  });
+function showRecordActionModal(recordId) {
+  actionRecordId = recordId;
+  const record = currentPlan.records.find(r => r.id === recordId);
+  // 动态更新"填写结果"按钮文案
+  const fillBtn = document.querySelector('#recordActionModal .record-action-btn:nth-child(2) span:last-child');
+  if (fillBtn) fillBtn.textContent = record && record.result ? '修改结果' : '填写结果';
+  document.getElementById('recordActionModal').classList.add('show');
 }
 
-function showContextMenu(x, y, row) {
-  const menu = document.getElementById('contextMenu');
-  const record = currentPlan.records.find(r => r.id === longPressRecordId);
-  document.getElementById('ctxFillResult').textContent = record && record.result ? '修改结果' : '填写结果';
-
-  menu.style.left = x + 'px';
-  menu.style.top = y + 'px';
-  menu.classList.add('show');
-
-  // 防止超出屏幕
-  requestAnimationFrame(() => {
-    const rect = menu.getBoundingClientRect();
-    if (rect.right > window.innerWidth) menu.style.left = (x - rect.width) + 'px';
-    if (rect.bottom > window.innerHeight) menu.style.top = (y - rect.height) + 'px';
-  });
+function hideRecordActionModal() {
+  document.getElementById('recordActionModal').classList.remove('show');
+  actionRecordId = null;
 }
 
-function hideContextMenu() {
-  document.getElementById('contextMenu').classList.remove('show');
+function onActionEditAmount() {
+  if (!actionRecordId) return;
+  const row = document.querySelector('tr[data-record-id="' + actionRecordId + '"]');
+  showEditAmountModal(actionRecordId, parseFloat(row.dataset.betAmount));
+  hideRecordActionModal();
+}
+
+function onActionFillResult() {
+  if (!actionRecordId) return;
+  showResultModal(actionRecordId);
+  hideRecordActionModal();
+}
+
+function onActionDelete() {
+  var id = actionRecordId;
+  hideRecordActionModal();
+  actionRecordId = id;
+  showDeleteConfirm();
+}
+
+function showDeleteConfirm() {
+  document.getElementById('deleteConfirmModal').classList.add('show');
+}
+
+function hideDeleteConfirm() {
+  document.getElementById('deleteConfirmModal').classList.remove('show');
+  actionRecordId = null;
+}
+
+async function confirmDeleteRecord() {
+  if (!actionRecordId) return;
+  try {
+    await api.deleteRecord(actionRecordId);
+    hideDeleteConfirm();
+    loadPlan(currentPlan.id);
+  } catch (error) {
+    alert(error.message);
+  }
 }
